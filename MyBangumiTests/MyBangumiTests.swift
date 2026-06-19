@@ -9,9 +9,15 @@ import Testing
 @testable import MyBangumi
 
 struct MyBangumiTests {
+    @Test func appLaunchConfigurationUsesRealAPIByDefault() {
+        let configuration = AppLaunchConfiguration(arguments: [])
 
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+        #expect(configuration.usesMockAPI == false)
     }
 
+    @Test func appLaunchConfigurationUsesMockAPIWhenFlagIsPresent() {
+        let configuration = AppLaunchConfiguration(arguments: [AppLaunchConfiguration.useMockAPIFlag])
+
+        #expect(configuration.usesMockAPI)
+    }
 }

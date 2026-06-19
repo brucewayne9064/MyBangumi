@@ -8,6 +8,7 @@ final class MyBangumiUITests: XCTestCase {
     @MainActor
     func testRootTabsExist() throws {
         let app = XCUIApplication()
+        app.launchArguments.append("-useMockAPI")
         app.launch()
 
         XCTAssertTrue(app.tabBars.buttons["发现"].waitForExistence(timeout: 5))

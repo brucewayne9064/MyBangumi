@@ -3,7 +3,7 @@ import SwiftUI
 struct ContentView: View {
     let api: any BangumiAPI
 
-    init(api: any BangumiAPI = BangumiAPIClient()) {
+    init(api: any BangumiAPI) {
         self.api = api
     }
 
