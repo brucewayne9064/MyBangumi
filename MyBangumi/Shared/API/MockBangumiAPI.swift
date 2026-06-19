@@ -17,13 +17,25 @@ struct MockBangumiAPI: BangumiAPI {
 
     func browseSubjects(type: SubjectType, sort: SubjectSort, limit: Int, offset: Int) async throws -> PagedSubjects {
         if let error { throw error }
-        return PagedSubjects(items: subjects, total: subjects.count, limit: limit, offset: offset)
+        let total = subjects.count
+        let page = Self.page(of: subjects, limit: limit, offset: offset)
+        return PagedSubjects(items: page, total: total, limit: limit, offset: offset)
     }
 
     func searchSubjects(keyword: String, type: SubjectType, limit: Int, offset: Int) async throws -> PagedSubjects {
         if let error { throw error }
-        let filtered = subjects.filter { $0.displayName.localizedCaseInsensitiveContains(keyword) || $0.name.localizedCaseInsensitiveContains(keyword) }
-        return PagedSubjects(items: filtered, total: filtered.count, limit: limit, offset: offset)
+        let filtered = subjects.filter {
+            $0.displayName.localizedCaseInsensitiveContains(keyword) || $0.name.localizedCaseInsensitiveContains(keyword)
+        }
+        let total = filtered.count
+        let page = Self.page(of: filtered, limit: limit, offset: offset)
+        return PagedSubjects(items: page, total: total, limit: limit, offset: offset)
+    }
+
+    private static func page<T>(of items: [T], limit: Int, offset: Int) -> [T] {
+        guard offset < items.count else { return [] }
+        let end = min(offset + max(limit, 0), items.count)
+        return Array(items[offset..<end])
     }
 
     func subject(id: Int) async throws -> SubjectDetail {
