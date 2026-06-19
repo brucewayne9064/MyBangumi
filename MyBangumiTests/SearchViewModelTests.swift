@@ -159,6 +159,34 @@ struct SearchViewModelTests {
         #expect(viewModel.isLoadingMore == false)
     }
 
+    @Test func loadMoreFailureKeepsLoadedResultsAndSurfacesNonDestructiveError() async throws {
+        let api = ControlledSearchBangumiAPI()
+        let viewModel = SearchViewModel(api: api)
+        let firstPage = (1...20).map(makeSubject(id:))
+
+        let initialSearch = Task { await viewModel.search(keyword: "作品", offset: 0) }
+        try await api.waitForRequest(keyword: "作品", offset: 0)
+        await api.succeed(
+            keyword: "作品",
+            offset: 0,
+            with: PagedSubjects(items: firstPage, total: 25, limit: 20, offset: 0)
+        )
+        await initialSearch.value
+
+        let loadMore = Task { await viewModel.loadMore() }
+        try await api.waitForRequest(keyword: "作品", offset: 20)
+        await api.fail(keyword: "作品", offset: 20, with: BangumiAPIError.server(statusCode: 503))
+        await loadMore.value
+
+        guard case .loaded(let page) = viewModel.state else {
+            Issue.record("Expected pagination failure to preserve the previously loaded state")
+            return
+        }
+        #expect(page.items == firstPage)
+        #expect(viewModel.loadMoreError?.isEmpty == false)
+        #expect(viewModel.isLoadingMore == false)
+    }
+
     private func makeSubject(id: Int) -> AnimeSubject {
         AnimeSubject(
             id: id,

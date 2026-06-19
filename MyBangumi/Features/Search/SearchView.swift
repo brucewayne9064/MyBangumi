@@ -28,11 +28,21 @@ struct SearchView: View {
                             .listRowSeparator(.hidden)
                         }
                         if page.hasMore {
-                            Button(viewModel.isLoadingMore ? "加载中..." : "加载更多") {
-                                Task { await viewModel.loadMore() }
+                            VStack(spacing: 8) {
+                                if let loadMoreError = viewModel.loadMoreError {
+                                    Text(loadMoreError)
+                                        .font(.footnote)
+                                        .foregroundStyle(.red)
+                                        .multilineTextAlignment(.center)
+                                }
+
+                                Button(viewModel.isLoadingMore ? "加载中..." : "加载更多") {
+                                    Task { await viewModel.loadMore() }
+                                }
+                                .disabled(viewModel.isLoadingMore)
                             }
-                            .disabled(viewModel.isLoadingMore)
                             .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
                         }
                     }
                     .listStyle(.plain)

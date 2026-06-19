@@ -20,6 +20,7 @@ final class MyBangumiUITests: XCTestCase {
     @MainActor
     func testCanSwitchBetweenAllTabs() throws {
         let app = XCUIApplication()
+        app.launchArguments.append("-useMockAPI")
         app.launch()
 
         for title in ["发现", "数据库", "我的", "搜索"] {

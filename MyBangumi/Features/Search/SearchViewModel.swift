@@ -20,6 +20,7 @@ final class SearchViewModel {
     var keyword = ""
     var state: State = .idle
     var isLoadingMore = false
+    var loadMoreError: String?
 
     init(api: any BangumiAPI) {
         self.api = api
@@ -30,6 +31,7 @@ final class SearchViewModel {
         keyword = value
         searchTask?.cancel()
         isLoadingMore = false
+        loadMoreError = nil
         searchGeneration += 1
         let generation = searchGeneration
 
@@ -53,6 +55,7 @@ final class SearchViewModel {
         self.keyword = keyword
         searchTask?.cancel()
         isLoadingMore = false
+        loadMoreError = nil
 
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         searchGeneration += 1
@@ -69,6 +72,7 @@ final class SearchViewModel {
 
     @MainActor
     private func performSearch(keyword: String, offset: Int, generation: Int) async {
+        loadMoreError = nil
         state = .loading
         do {
             let page = try await api.searchSubjects(keyword: keyword, type: .anime, limit: limit, offset: offset)
@@ -91,6 +95,7 @@ final class SearchViewModel {
         let keyword = activeKeyword
         let nextOffset = current.offset + current.items.count
         isLoadingMore = true
+        loadMoreError = nil
         defer {
             if generation == searchGeneration {
                 isLoadingMore = false
@@ -115,7 +120,7 @@ final class SearchViewModel {
             guard isCurrentSearch(generation: generation, keyword: keyword) else { return }
         } catch {
             guard isCurrentSearch(generation: generation, keyword: keyword) else { return }
-            state = .failed(error.localizedDescription)
+            loadMoreError = error.localizedDescription
         }
     }
 
