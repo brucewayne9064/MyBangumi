@@ -24,9 +24,10 @@ struct SearchView: View {
                                 .listRowSeparator(.hidden)
                         }
                         if page.hasMore {
-                            Button("加载更多") {
+                            Button(viewModel.isLoadingMore ? "加载中..." : "加载更多") {
                                 Task { await viewModel.loadMore() }
                             }
+                            .disabled(viewModel.isLoadingMore)
                             .frame(maxWidth: .infinity)
                         }
                     }
