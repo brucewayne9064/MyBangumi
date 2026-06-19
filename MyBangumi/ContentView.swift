@@ -1,14 +1,20 @@
 import SwiftUI
 
 struct ContentView: View {
+    let api: any BangumiAPI
+
+    init(api: any BangumiAPI = BangumiAPIClient()) {
+        self.api = api
+    }
+
     var body: some View {
         TabView {
-            DiscoverView()
+            DiscoverView(viewModel: DiscoverViewModel(api: api))
                 .tabItem {
                     Label("发现", systemImage: "sparkles")
                 }
 
-            DatabaseView()
+            DatabaseView(viewModel: DatabaseViewModel(api: api))
                 .tabItem {
                     Label("数据库", systemImage: "rectangle.stack")
                 }
@@ -27,5 +33,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView(api: MockBangumiAPI())
 }

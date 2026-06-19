@@ -1,15 +1,50 @@
 import SwiftUI
 
 struct DiscoverView: View {
+    @State var viewModel: DiscoverViewModel
+
     var body: some View {
         NavigationStack {
-            Text("发现")
-                .font(.largeTitle.bold())
-                .navigationTitle("发现")
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    module(title: "高分动画", state: viewModel.ranked)
+                    module(title: "近期动画", state: viewModel.recent)
+                }
+                .padding()
+            }
+            .navigationTitle("发现")
+            .task {
+                await viewModel.load()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func module(title: String, state: DiscoverViewModel.ModuleState) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.title2.bold())
+            switch state {
+            case .loading:
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+            case .loaded(let subjects):
+                if subjects.isEmpty {
+                    EmptyStateView(title: "暂无内容", message: "这个模块暂时没有可展示的动画。")
+                } else {
+                    ForEach(subjects) { subject in
+                        SubjectCardView(subject: subject)
+                    }
+                }
+            case .failed(let message):
+                ErrorStateView(message: message) {
+                    Task { await viewModel.load() }
+                }
+            }
         }
     }
 }
 
 #Preview {
-    DiscoverView()
+    DiscoverView(viewModel: DiscoverViewModel(api: MockBangumiAPI()))
 }
