@@ -26,6 +26,16 @@ struct ViewModelStateTests {
         #expect(message.isEmpty == false)
     }
 
+    @Test @MainActor func databaseAppliesFilterDraftSort() {
+        let viewModel = DatabaseViewModel(api: MockBangumiAPI(subjects: [.preview]))
+        var draft = DatabaseFilterDraft(sort: .rank)
+
+        draft.sort = .date
+        viewModel.apply(filter: draft)
+
+        #expect(viewModel.sort == .date)
+    }
+
     @Test @MainActor func discoverLoadsRankedAndRecentSubjects() async {
         let viewModel = DiscoverViewModel(api: MockBangumiAPI(subjects: [.preview]))
 

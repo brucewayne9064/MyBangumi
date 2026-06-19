@@ -1,6 +1,10 @@
 import Foundation
 import Observation
 
+struct DatabaseFilterDraft: Equatable {
+    var sort: SubjectSort = .rank
+}
+
 @Observable
 final class DatabaseViewModel {
     enum State: Equatable {
@@ -16,6 +20,11 @@ final class DatabaseViewModel {
 
     init(api: any BangumiAPI) {
         self.api = api
+    }
+
+    @MainActor
+    func apply(filter: DatabaseFilterDraft) {
+        sort = filter.sort
     }
 
     @MainActor

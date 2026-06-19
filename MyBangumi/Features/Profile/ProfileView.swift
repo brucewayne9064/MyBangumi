@@ -22,6 +22,14 @@ struct ProfileView: View {
                 }
             }
             .navigationTitle("我的")
+            .toolbar {
+                NavigationLink {
+                    SettingsView()
+                } label: {
+                    Image(systemName: "gearshape")
+                }
+                .accessibilityLabel("设置")
+            }
         }
     }
 }

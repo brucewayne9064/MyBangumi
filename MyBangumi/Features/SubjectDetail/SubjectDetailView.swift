@@ -13,6 +13,7 @@ struct SubjectDetailView: View {
         }
         .navigationTitle(viewModel.subject.displayName)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
         .task {
             await viewModel.load()
         }
