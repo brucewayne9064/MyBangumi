@@ -16,4 +16,15 @@ final class MyBangumiUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.buttons["我的"].exists)
         XCTAssertTrue(app.tabBars.buttons["搜索"].exists)
     }
+
+    @MainActor
+    func testCanSwitchBetweenAllTabs() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        for title in ["发现", "数据库", "我的", "搜索"] {
+            app.tabBars.buttons[title].tap()
+            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 3))
+        }
+    }
 }

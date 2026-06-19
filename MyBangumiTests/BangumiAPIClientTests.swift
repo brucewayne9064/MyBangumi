@@ -44,6 +44,34 @@ struct BangumiAPIClientTests {
         #expect(result.items.isEmpty)
     }
 
+    @Test func subjectUsesCacheForRepeatedDetailRequests() async throws {
+        let client = makeClient()
+        var requestCount = 0
+        URLProtocolStub.handler = { request in
+            requestCount += 1
+            let data = """
+            {
+              "id": 42,
+              "name": "Cowboy Bebop",
+              "name_cn": "星际牛仔",
+              "summary": "Space western",
+              "images": { "large": "https://example.com/bebop.jpg" },
+              "rating": { "score": 9.1, "total": 1000 },
+              "rank": 1,
+              "tags": [{ "name": "科幻" }],
+              "infobox": [{ "key": "放送开始", "value": "1998-04-03" }]
+            }
+            """.data(using: .utf8)!
+            return (HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!, data)
+        }
+
+        let first = try await client.subject(id: 42)
+        let second = try await client.subject(id: 42)
+
+        #expect(first == second)
+        #expect(requestCount == 1)
+    }
+
     @Test func nonSuccessStatusMapsToServerError() async throws {
         let client = makeClient()
         URLProtocolStub.handler = { request in

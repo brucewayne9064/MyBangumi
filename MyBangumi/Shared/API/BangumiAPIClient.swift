@@ -4,15 +4,18 @@ struct BangumiAPIClient: BangumiAPI {
     private let baseURL: URL
     private let session: URLSession
     private let userAgent: String
+    private let cache: InMemorySubjectCache
 
     init(
         baseURL: URL = URL(string: "https://api.bgm.tv")!,
         session: URLSession = .shared,
-        userAgent: String = "MyBangumi/1.0 (iOS; https://github.com/brucewayne9064/MyBangumi)"
+        userAgent: String = "MyBangumi/1.0 (iOS; https://github.com/brucewayne9064/MyBangumi)",
+        cache: InMemorySubjectCache = InMemorySubjectCache()
     ) {
         self.baseURL = baseURL
         self.session = session
         self.userAgent = userAgent
+        self.cache = cache
     }
 
     func browseSubjects(type: SubjectType, sort: SubjectSort, limit: Int, offset: Int) async throws -> PagedSubjects {
@@ -39,8 +42,13 @@ struct BangumiAPIClient: BangumiAPI {
     }
 
     func subject(id: Int) async throws -> SubjectDetail {
+        if let cached = await cache.detail(for: id) {
+            return cached
+        }
         let response: BangumiSubjectDTO = try await send(baseURL.appending(path: "/v0/subjects/\(id)"), method: "GET", body: Optional<Data>.none, endpoint: "/v0/subjects/{id}")
-        return response.detail
+        let detail = response.detail
+        await cache.store(detail)
+        return detail
     }
 
     private func send<Response: Decodable>(
