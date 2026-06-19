@@ -1,15 +1,47 @@
 import SwiftUI
 
 struct SearchView: View {
+    @State var viewModel: SearchViewModel
+
     var body: some View {
         NavigationStack {
-            Text("搜索")
-                .font(.largeTitle.bold())
-                .navigationTitle("搜索")
+            Group {
+                switch viewModel.state {
+                case .idle:
+                    EmptyStateView(title: "搜索动画", message: "输入关键词查找 Bangumi 动画条目。")
+                case .loading:
+                    ProgressView()
+                case .empty:
+                    EmptyStateView(title: "没有结果", message: "换一个关键词试试。")
+                case .failed(let message):
+                    ErrorStateView(message: message) {
+                        Task { await viewModel.search(keyword: viewModel.keyword, offset: 0) }
+                    }
+                case .loaded(let page):
+                    List {
+                        ForEach(page.items) { subject in
+                            SubjectCardView(subject: subject)
+                                .listRowSeparator(.hidden)
+                        }
+                        if page.hasMore {
+                            Button("加载更多") {
+                                Task { await viewModel.loadMore() }
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                    }
+                    .listStyle(.plain)
+                }
+            }
+            .navigationTitle("搜索")
+            .searchable(text: Binding(
+                get: { viewModel.keyword },
+                set: { viewModel.keywordChanged(to: $0) }
+            ), prompt: "搜索动画")
         }
     }
 }
 
 #Preview {
-    SearchView()
+    SearchView(viewModel: SearchViewModel(api: MockBangumiAPI()))
 }

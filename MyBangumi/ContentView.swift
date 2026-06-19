@@ -24,7 +24,7 @@ struct ContentView: View {
                     Label("我的", systemImage: "person.crop.circle")
                 }
 
-            SearchView()
+            SearchView(viewModel: SearchViewModel(api: api))
                 .tabItem {
                     Label("搜索", systemImage: "magnifyingglass")
                 }
