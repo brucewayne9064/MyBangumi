@@ -1,0 +1,30 @@
+# macOS
+.DS_Store
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+Package.resolved
+
+# CocoaPods / Carthage, if introduced later
+Pods/
+Carthage/Build/
+
+# Node dependencies for local tooling
+node_modules/
+
+# Superpowers brainstorming scratch files
+.superpowers/
+
+# Local environment files
+.env
+.env.*
+
