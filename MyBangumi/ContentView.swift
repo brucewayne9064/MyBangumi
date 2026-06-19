@@ -9,26 +9,23 @@ struct ContentView: View {
 
     var body: some View {
         TabView {
-            DiscoverView(viewModel: DiscoverViewModel(api: api))
-                .tabItem {
-                    Label("发现", systemImage: "sparkles")
-                }
+            Tab("发现", systemImage: "sparkles") {
+                DiscoverView(viewModel: DiscoverViewModel(api: api))
+            }
 
-            DatabaseView(viewModel: DatabaseViewModel(api: api))
-                .tabItem {
-                    Label("数据库", systemImage: "rectangle.stack")
-                }
+            Tab("数据库", systemImage: "rectangle.stack") {
+                DatabaseView(viewModel: DatabaseViewModel(api: api))
+            }
 
-            ProfileView()
-                .tabItem {
-                    Label("我的", systemImage: "person.crop.circle")
-                }
+            Tab("我的", systemImage: "person.crop.circle") {
+                ProfileView()
+            }
 
-            SearchView(viewModel: SearchViewModel(api: api))
-                .tabItem {
-                    Label("搜索", systemImage: "magnifyingglass")
-                }
+            Tab(role: .search) {
+                SearchView(viewModel: SearchViewModel(api: api))
+            }
         }
+        .tabBarMinimizeBehavior(.onScrollDown)
     }
 }
 

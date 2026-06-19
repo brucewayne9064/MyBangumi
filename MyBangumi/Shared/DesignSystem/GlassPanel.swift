@@ -1,22 +1,32 @@
 import SwiftUI
 
 struct GlassPanel<Content: View>: View {
-    private let material: Material
+    private let cornerRadius: Double
+    private let isInteractive: Bool
     private let content: Content
 
-    init(material: Material = .thinMaterial, @ViewBuilder content: () -> Content) {
-        self.material = material
+    init(
+        cornerRadius: Double = 24,
+        isInteractive: Bool = false,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.cornerRadius = cornerRadius
+        self.isInteractive = isInteractive
         self.content = content()
     }
 
     var body: some View {
         content
             .padding()
-            .background(material, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .glassEffect()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .glassEffect(glass, in: .rect(cornerRadius: cornerRadius))
             .overlay {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(.white.opacity(0.18), lineWidth: 1)
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(.white.opacity(0.16), lineWidth: 1)
             }
+    }
+
+    private var glass: Glass {
+        isInteractive ? .regular.interactive() : .regular
     }
 }

@@ -5,6 +5,7 @@ import Testing
 struct DesignSystemTests {
     @Test @MainActor func glassPanelWrapsContent() {
         _ = GlassPanel { Text("Hello") }
+        _ = GlassPanel(isInteractive: true) { Text("Interactive") }
     }
 
     @Test @MainActor func subjectPosterViewAcceptsOptionalURL() {

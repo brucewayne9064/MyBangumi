@@ -4,7 +4,7 @@ struct SubjectCardView: View {
     let subject: AnimeSubject
 
     var body: some View {
-        GlassPanel {
+        GlassPanel(isInteractive: true) {
             HStack(alignment: .top, spacing: 14) {
                 SubjectPosterView(url: subject.imageURL)
 
