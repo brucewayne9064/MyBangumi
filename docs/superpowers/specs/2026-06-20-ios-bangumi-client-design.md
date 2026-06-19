@@ -30,6 +30,19 @@ Subject detail is reachable from Discover, Database, and Search through a pushed
 - Unit tests for API request handling, mapping, and view model state transitions.
 - A lightweight UI smoke test for launch and basic navigation.
 
+## Xcode Project Settings
+
+The project must use these Xcode settings:
+
+- Product: App
+- Interface: SwiftUI
+- Language: Swift
+- Testing System: Swift Testing
+- Storage: None
+- Minimum Deployment Target: iOS 26.0
+
+Do not enable SwiftData for the first release. The app uses in-memory cache only, and persistent storage is deferred.
+
 ## First Release Excludes
 
 - Bangumi login or OAuth.
@@ -53,18 +66,44 @@ The search endpoint is experimental, so search errors should be surfaced clearly
 
 ## Architecture
 
-Use a small native SwiftUI architecture with no third-party dependencies in the first release.
+Use MVVM with feature modules and no third-party dependencies in the first release.
 
 Main areas:
 
-- App: application entry point, root tabs, and dependency setup.
-- Features: `Discovery`, `Database`, `Search`, `Profile`, and `SubjectDetail`.
-- BangumiAPI: `URLSession` based API client, endpoint definitions, request construction, response models, and error mapping.
-- Domain: stable app models such as `AnimeSubject`, `SubjectDetail`, and `RatingSummary`.
-- DesignSystem: reusable Liquid Glass-style components, poster cards, rating pills, loading skeletons, empty states, and error views.
-- Cache: first release uses lightweight in-memory caching only. Persistent response caching, custom image cache storage, SwiftData, and local history are deferred.
+- `MyBangumi/Features/Discover`: Discover tab views, view models, and module state.
+- `MyBangumi/Features/Database`: Database tab views, view models, sorting, and simple filter state.
+- `MyBangumi/Features/Search`: Search tab views, debounced search state, result pagination, and empty/error states.
+- `MyBangumi/Features/SubjectDetail`: Subject detail view and view model.
+- `MyBangumi/Features/Profile`: My tab placeholder, settings, attribution, and diagnostics.
+- `MyBangumi/Shared/API`: Bangumi API protocol, `URLSession` client, endpoint definitions, request construction, response models, mock API, and error mapping.
+- `MyBangumi/Shared/Domain`: Stable app models such as `AnimeSubject`, `SubjectDetail`, and `RatingSummary`.
+- `MyBangumi/Shared/DesignSystem`: reusable Liquid Glass-style components, poster cards, rating pills, loading skeletons, empty states, and error views.
+- `MyBangumi/Shared/Cache`: first release uses lightweight in-memory caching only. Persistent response caching, custom image cache storage, SwiftData, and local history are deferred.
 
 State management should use modern Swift observation patterns. Network APIs should use `async/await`. UI should depend on domain models rather than raw API response structs.
+
+Views must not perform networking. All network requests go through `BangumiAPI`. View models own loading state and trigger API calls. Views only render state and send user intents to view models.
+
+## API Layer
+
+Use protocol-first API design:
+
+```swift
+protocol BangumiAPI {
+    func browseSubjects(type: SubjectType, sort: SubjectSort, limit: Int, offset: Int) async throws -> PagedSubjects
+    func searchSubjects(keyword: String, type: SubjectType, limit: Int, offset: Int) async throws -> PagedSubjects
+    func subject(id: Int) async throws -> SubjectDetail
+}
+```
+
+The production implementation is `BangumiAPIClient`. Tests and previews use `MockBangumiAPI`.
+
+`BangumiAPIClient` must:
+
+- Use `URLSession`.
+- Set a clear `User-Agent`, including the app name and GitHub repository URL.
+- Map non-2xx responses into typed API errors.
+- Keep request models, response models, and domain models separate.
 
 ## Navigation
 
@@ -97,6 +136,7 @@ Search:
 - Provides a dedicated keyword search page.
 - Calls `POST /v0/search/subjects`.
 - Filters results to anime.
+- Debounces user input before calling the API. The debounce interval must be between 300ms and 500ms.
 - Distinguishes empty results from API or network failures.
 - Supports a first page of results and one explicit "load more" action using `limit` and `offset`.
 
@@ -107,6 +147,12 @@ Subject Detail:
 - Shows cover, original name, Chinese name, rating, rank, summary, metadata, and tags.
 - Does not include characters, staff, relations, or episodes in the first release.
 - Cover image failure should not fail the page.
+
+Images:
+
+- Use `AsyncImage` only.
+- Do not add Kingfisher, Nuke, or any other image loading dependency.
+- Show a deterministic placeholder when a cover is missing or fails to load.
 
 My:
 
@@ -124,6 +170,28 @@ Errors should be clear to users and useful to developers:
 - Empty search result: show an empty state, not an error.
 - Image failure: show a cover placeholder only.
 - Discover module failure: fail that module locally, not the entire Discover page.
+
+## Design System
+
+Liquid Glass should use concrete iOS 26 system APIs where available:
+
+- `.thinMaterial`
+- `.regularMaterial`
+- `glassEffect`
+- `glassEffectContainer`
+
+Use these APIs through shared design-system components instead of scattering visual effects across feature views.
+
+## Implementation Constraints
+
+The first implementation must compile and run after each milestone. Do not leave placeholder implementations, unimplemented stubs, or deliberate compilation errors. Prioritize working vertical slices over architectural completeness.
+
+Each milestone must end with:
+
+- The app compiling for the iOS 26 simulator.
+- Relevant unit tests passing.
+- No `TODO` code required for the milestone's behavior to work.
+- A git commit for the completed milestone.
 
 ## Testing Strategy
 

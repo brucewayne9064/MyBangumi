@@ -24,6 +24,9 @@ node_modules/
 # Superpowers brainstorming scratch files
 .superpowers/
 
+# Local git worktrees
+.worktrees/
+
 # Local environment files
 .env
 .env.*
