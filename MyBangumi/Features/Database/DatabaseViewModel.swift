@@ -9,7 +9,7 @@ final class DatabaseViewModel {
         case failed(String)
     }
 
-    private let api: any BangumiAPI
+    let api: any BangumiAPI
     private let limit = 20
     var sort: SubjectSort = .rank
     var state: State = .loading

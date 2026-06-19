@@ -9,7 +9,7 @@ final class DiscoverViewModel {
         case failed(String)
     }
 
-    private let api: any BangumiAPI
+    let api: any BangumiAPI
     var ranked: ModuleState = .loading
     var recent: ModuleState = .loading
 

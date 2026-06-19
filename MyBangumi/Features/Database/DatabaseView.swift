@@ -14,8 +14,12 @@ struct DatabaseView: View {
                         EmptyStateView(title: "暂无条目", message: "当前排序下没有动画条目。")
                     } else {
                         List(page.items) { subject in
-                            SubjectCardView(subject: subject)
-                                .listRowSeparator(.hidden)
+                            NavigationLink {
+                                SubjectDetailView(viewModel: SubjectDetailViewModel(subject: subject, api: viewModel.api))
+                            } label: {
+                                SubjectCardView(subject: subject)
+                            }
+                            .listRowSeparator(.hidden)
                         }
                         .listStyle(.plain)
                     }

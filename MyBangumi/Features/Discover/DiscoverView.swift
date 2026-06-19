@@ -33,7 +33,11 @@ struct DiscoverView: View {
                     EmptyStateView(title: "暂无内容", message: "这个模块暂时没有可展示的动画。")
                 } else {
                     ForEach(subjects) { subject in
-                        SubjectCardView(subject: subject)
+                        NavigationLink {
+                            SubjectDetailView(viewModel: SubjectDetailViewModel(subject: subject, api: viewModel.api))
+                        } label: {
+                            SubjectCardView(subject: subject)
+                        }
                     }
                 }
             case .failed(let message):

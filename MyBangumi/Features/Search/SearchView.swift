@@ -20,8 +20,12 @@ struct SearchView: View {
                 case .loaded(let page):
                     List {
                         ForEach(page.items) { subject in
-                            SubjectCardView(subject: subject)
-                                .listRowSeparator(.hidden)
+                            NavigationLink {
+                                SubjectDetailView(viewModel: SubjectDetailViewModel(subject: subject, api: viewModel.api))
+                            } label: {
+                                SubjectCardView(subject: subject)
+                            }
+                            .listRowSeparator(.hidden)
                         }
                         if page.hasMore {
                             Button(viewModel.isLoadingMore ? "加载中..." : "加载更多") {

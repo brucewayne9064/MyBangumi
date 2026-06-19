@@ -11,7 +11,7 @@ final class SearchViewModel {
         case failed(String)
     }
 
-    private let api: any BangumiAPI
+    let api: any BangumiAPI
     private let limit = 20
     private var searchTask: Task<Void, Never>?
     private var activeKeyword = ""
