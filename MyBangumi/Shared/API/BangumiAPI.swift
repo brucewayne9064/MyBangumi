@@ -1,5 +1,6 @@
 protocol BangumiAPI: Sendable {
     func me() async throws -> BangumiUser
+    func airingCalendar() async throws -> [AiringCalendarDay]
     func userCollections(username: String, status: CollectionStatus, limit: Int, offset: Int) async throws -> [UserAnimeCollection]
     func updateCollection(subjectID: Int, status: CollectionStatus, rating: Int?, comment: String?, isPrivate: Bool) async throws
     func episodes(subjectID: Int) async throws -> [AnimeEpisode]

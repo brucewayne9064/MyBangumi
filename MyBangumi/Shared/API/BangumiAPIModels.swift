@@ -53,6 +53,20 @@ struct BangumiSearchResponse: Decodable {
     }
 }
 
+struct BangumiCalendarDayDTO: Decodable {
+    let weekday: BangumiWeekdayDTO
+    let items: [BangumiSubjectDTO]
+
+    var domain: AiringCalendarDay {
+        AiringCalendarDay(id: weekday.id, title: weekday.cn, items: items.map(\.animeSubject))
+    }
+}
+
+struct BangumiWeekdayDTO: Decodable {
+    let cn: String
+    let id: Int
+}
+
 struct BangumiPagedUserCollectionResponse: Decodable {
     let data: [BangumiUserCollectionDTO]
 
