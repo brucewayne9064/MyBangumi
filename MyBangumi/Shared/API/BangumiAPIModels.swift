@@ -195,12 +195,24 @@ struct BangumiImagesDTO: Decodable {
     let large: String?
     let common: String?
     let medium: String?
+    let small: String?
+    let grid: String?
 
     var preferredURL: URL? {
-        [large, common, medium]
+        [large, common, medium, grid, small]
             .compactMap { $0 }
-            .compactMap(URL.init(string:))
+            .compactMap(normalizedImageURL)
             .first
+    }
+
+    private func normalizedImageURL(from rawValue: String) -> URL? {
+        guard var components = URLComponents(string: rawValue) else {
+            return nil
+        }
+        if components.scheme == "http", components.host?.hasSuffix("bgm.tv") == true {
+            components.scheme = "https"
+        }
+        return components.url
     }
 }
 
