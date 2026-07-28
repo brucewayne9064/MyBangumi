@@ -19,6 +19,20 @@ final class DiscoverViewModel {
 
     @MainActor
     func load() async {
+        await load(force: false)
+    }
+
+    @MainActor
+    func reload() async {
+        await load(force: true)
+    }
+
+    @MainActor
+    private func load(force: Bool) async {
+        if force {
+            ranked = .loading
+            recent = .loading
+        }
         guard ranked.isLoaded == false || recent.isLoaded == false else { return }
         async let rankedLoad: Void = loadRanked()
         async let recentLoad: Void = loadRecent()
