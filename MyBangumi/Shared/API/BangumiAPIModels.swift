@@ -53,6 +53,31 @@ struct BangumiSearchResponse: Decodable {
     }
 }
 
+struct BangumiPagedUserCollectionResponse: Decodable {
+    let data: [BangumiUserCollectionDTO]
+
+    var animeCollections: [UserAnimeCollection] {
+        data.compactMap(\.domain)
+    }
+}
+
+struct BangumiUserCollectionDTO: Decodable {
+    let subject: BangumiSubjectDTO?
+    let type: CollectionStatus
+    let rate: Int?
+    let comment: String?
+
+    var domain: UserAnimeCollection? {
+        guard let subject else { return nil }
+        return UserAnimeCollection(
+            subject: subject.animeSubject,
+            status: type,
+            rating: rate ?? 0,
+            comment: comment ?? ""
+        )
+    }
+}
+
 struct BangumiSubjectDTO: Decodable {
     let id: Int
     let name: String

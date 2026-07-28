@@ -38,6 +38,7 @@ struct ProfileView: View {
             signedOutCard
         case .authenticated(let user):
             userCard(user)
+            trackingEntry(user)
             accountActions
         case .failed(let message):
             ErrorStateView(message: message) {
@@ -89,6 +90,24 @@ struct ProfileView: View {
                 }
             }
         }
+    }
+
+    private func trackingEntry(_ user: BangumiUser) -> some View {
+        NavigationLink {
+            TrackingView(viewModel: TrackingViewModel(api: viewModel.api, username: user.username))
+        } label: {
+            GlassPanel(isInteractive: true) {
+                HStack {
+                    Label("我的动画", systemImage: "play.rectangle.stack")
+                        .font(.headline)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     private var accountActions: some View {

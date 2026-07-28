@@ -14,6 +14,25 @@ struct SubjectDetailView: View {
         .navigationTitle(viewModel.subject.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
+        .toolbar {
+            Menu("记录") {
+                ForEach(CollectionStatus.allCases, id: \.self) { status in
+                    Button(status.title) {
+                        Task { await viewModel.updateCollection(status: status) }
+                    }
+                }
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            if let message = viewModel.collectionMessage {
+                Text(message)
+                    .font(.footnote)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .glassEffect(.regular, in: .capsule)
+                    .padding(.bottom, 8)
+            }
+        }
         .task {
             await viewModel.load()
         }

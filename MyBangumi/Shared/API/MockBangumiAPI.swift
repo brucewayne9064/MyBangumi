@@ -2,17 +2,20 @@ import Foundation
 
 struct MockBangumiAPI: BangumiAPI {
     var currentUser: BangumiUser
+    var collections: [CollectionStatus: [UserAnimeCollection]]
     var subjects: [AnimeSubject]
     var detail: SubjectDetail
     var error: BangumiAPIError?
 
     init(
         currentUser: BangumiUser = .preview,
+        collections: [CollectionStatus: [UserAnimeCollection]] = [:],
         subjects: [AnimeSubject] = [.preview],
         detail: SubjectDetail = .preview,
         error: BangumiAPIError? = nil
     ) {
         self.currentUser = currentUser
+        self.collections = collections
         self.subjects = subjects
         self.detail = detail
         self.error = error
@@ -21,6 +24,16 @@ struct MockBangumiAPI: BangumiAPI {
     func me() async throws -> BangumiUser {
         if let error { throw error }
         return currentUser
+    }
+
+    func userCollections(username: String, status: CollectionStatus, limit: Int, offset: Int) async throws -> [UserAnimeCollection] {
+        if let error { throw error }
+        let items = collections[status] ?? []
+        return Self.page(of: items, limit: limit, offset: offset)
+    }
+
+    func updateCollection(subjectID: Int, status: CollectionStatus, rating: Int?, comment: String?, isPrivate: Bool) async throws {
+        if let error { throw error }
     }
 
     func browseSubjects(type: SubjectType, sort: SubjectSort, limit: Int, offset: Int) async throws -> PagedSubjects {

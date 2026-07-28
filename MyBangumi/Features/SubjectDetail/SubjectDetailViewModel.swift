@@ -12,6 +12,7 @@ final class SubjectDetailViewModel {
     private let api: any BangumiAPI
     let subject: AnimeSubject
     var state: State = .loading
+    var collectionMessage: String?
 
     init(subject: AnimeSubject, api: any BangumiAPI) {
         self.subject = subject
@@ -25,6 +26,16 @@ final class SubjectDetailViewModel {
             state = .loaded(try await api.subject(id: subject.id))
         } catch {
             state = .failed(error.localizedDescription)
+        }
+    }
+
+    @MainActor
+    func updateCollection(status: CollectionStatus) async {
+        do {
+            try await api.updateCollection(subjectID: subject.id, status: status, rating: nil, comment: nil, isPrivate: false)
+            collectionMessage = "已标记为\(status.title)"
+        } catch {
+            collectionMessage = error.localizedDescription
         }
     }
 }

@@ -86,6 +86,23 @@ struct BangumiAPIClientTests {
         }
     }
 
+    @Test func updateCollectionBuildsExpectedRequest() async throws {
+        let client = makeClient()
+        URLProtocolStub.handler = { request in
+            #expect(request.url?.path == "/v0/users/-/collections/1")
+            #expect(request.httpMethod == "PATCH")
+            #expect(request.value(forHTTPHeaderField: "Content-Type") == "application/json")
+            let body = try JSONSerialization.jsonObject(with: request.httpBody ?? Data()) as? [String: Any]
+            #expect(body?["type"] as? Int == CollectionStatus.doing.rawValue)
+            #expect(body?["rate"] as? Int == 8)
+            #expect(body?["comment"] as? String == "很喜欢")
+            #expect(body?["private"] as? Bool == false)
+            return (HTTPURLResponse(url: request.url!, statusCode: 204, httpVersion: nil, headerFields: nil)!, Data())
+        }
+
+        try await client.updateCollection(subjectID: 1, status: .doing, rating: 8, comment: "很喜欢", isPrivate: false)
+    }
+
     private func makeClient() -> BangumiAPIClient {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [URLProtocolStub.self]

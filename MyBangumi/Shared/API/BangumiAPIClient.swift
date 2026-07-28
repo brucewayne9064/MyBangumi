@@ -26,6 +26,33 @@ struct BangumiAPIClient: BangumiAPI {
         return response.domain
     }
 
+    func userCollections(username: String, status: CollectionStatus, limit: Int, offset: Int) async throws -> [UserAnimeCollection] {
+        let response: BangumiPagedUserCollectionResponse = try await send(
+            baseURL.appending(path: "/v0/users/\(username)/collections"),
+            method: "GET",
+            body: Optional<Data>.none,
+            endpoint: "/v0/users/{username}/collections",
+            query: [
+                URLQueryItem(name: "subject_type", value: String(SubjectType.anime.rawValue)),
+                URLQueryItem(name: "type", value: String(status.rawValue)),
+                URLQueryItem(name: "limit", value: String(limit)),
+                URLQueryItem(name: "offset", value: String(offset))
+            ]
+        )
+        return response.animeCollections
+    }
+
+    func updateCollection(subjectID: Int, status: CollectionStatus, rating: Int?, comment: String?, isPrivate: Bool) async throws {
+        let payload = UserSubjectCollectionModifyRequest(type: status.rawValue, rate: rating, comment: comment, privateCollection: isPrivate)
+        let data = try JSONEncoder().encode(payload)
+        try await sendNoContent(
+            baseURL.appending(path: "/v0/users/-/collections/\(subjectID)"),
+            method: "PATCH",
+            body: data,
+            endpoint: "/v0/users/-/collections/{subject_id}"
+        )
+    }
+
     func browseSubjects(type: SubjectType, sort: SubjectSort, limit: Int, offset: Int) async throws -> PagedSubjects {
         var components = URLComponents(url: baseURL.appending(path: "/v0/subjects"), resolvingAgainstBaseURL: false)
         components?.queryItems = [
@@ -106,6 +133,39 @@ struct BangumiAPIClient: BangumiAPI {
             throw BangumiAPIError.decoding(endpoint: endpoint)
         }
     }
+
+    private func sendNoContent(
+        _ url: URL?,
+        method: String,
+        body: Data?,
+        endpoint: String
+    ) async throws {
+        guard let url else { throw BangumiAPIError.invalidURL }
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+        if let accessToken = accessTokenProvider?(), !accessToken.isEmpty {
+            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        }
+        if let body {
+            request.httpBody = body
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
+
+        let response: URLResponse
+        do {
+            (_, response) = try await session.data(for: request)
+        } catch {
+            throw BangumiAPIError.transport(error.localizedDescription)
+        }
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw BangumiAPIError.transport("Missing HTTP response")
+        }
+        guard 200..<300 ~= httpResponse.statusCode else {
+            throw BangumiAPIError.server(statusCode: httpResponse.statusCode)
+        }
+    }
 }
 
 private struct SearchRequest: Encodable {
@@ -116,3 +176,18 @@ private struct SearchRequest: Encodable {
 private struct SearchFilter: Encodable {
     let type: [Int]
 }
+
+private struct UserSubjectCollectionModifyRequest: Encodable {
+    let type: Int
+    let rate: Int?
+    let comment: String?
+    let privateCollection: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case type
+        case rate
+        case comment
+        case privateCollection = "private"
+    }
+}
+

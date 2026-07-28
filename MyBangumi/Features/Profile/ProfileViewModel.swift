@@ -11,7 +11,7 @@ final class ProfileViewModel {
         case failed(String)
     }
 
-    private let api: any BangumiAPI
+    let api: any BangumiAPI
     private let appSession: AppSession
     var state: State = .loading
 
