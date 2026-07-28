@@ -21,6 +21,11 @@ struct BangumiAPIClient: BangumiAPI {
         self.accessTokenProvider = accessTokenProvider
     }
 
+    func me() async throws -> BangumiUser {
+        let response: BangumiUserDTO = try await send(baseURL.appending(path: "/v0/me"), method: "GET", body: Optional<Data>.none, endpoint: "/v0/me")
+        return response.domain
+    }
+
     func browseSubjects(type: SubjectType, sort: SubjectSort, limit: Int, offset: Int) async throws -> PagedSubjects {
         var components = URLComponents(url: baseURL.appending(path: "/v0/subjects"), resolvingAgainstBaseURL: false)
         components?.queryItems = [

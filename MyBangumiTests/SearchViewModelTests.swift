@@ -209,6 +209,10 @@ private actor ControlledSearchBangumiAPI: BangumiAPI {
     private var pending: [RequestKey: [CheckedContinuation<PagedSubjects, Error>]] = [:]
     private var counts: [RequestKey: Int] = [:]
 
+    func me() async throws -> BangumiUser {
+        fatalError("Unused in SearchViewModelTests")
+    }
+
     func browseSubjects(type: SubjectType, sort: SubjectSort, limit: Int, offset: Int) async throws -> PagedSubjects {
         fatalError("Unused in SearchViewModelTests")
     }

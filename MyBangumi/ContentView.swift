@@ -20,7 +20,7 @@ struct ContentView: View {
             }
 
             Tab("我的", systemImage: "person.crop.circle") {
-                ProfileView()
+                ProfileView(viewModel: ProfileViewModel(api: api, appSession: appSession))
             }
 
             Tab(role: .search) {

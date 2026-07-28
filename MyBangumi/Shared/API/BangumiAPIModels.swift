@@ -1,5 +1,26 @@
 import Foundation
 
+struct BangumiUserDTO: Decodable {
+    let id: Int
+    let username: String
+    let nickname: String
+    let avatar: AvatarDTO?
+
+    var domain: BangumiUser {
+        BangumiUser(id: id, username: username, nickname: nickname, avatarURL: avatar?.mediumURL)
+    }
+}
+
+struct AvatarDTO: Decodable {
+    let large: String?
+    let medium: String?
+    let small: String?
+
+    var mediumURL: URL? {
+        medium.flatMap(URL.init(string:))
+    }
+}
+
 struct BangumiPagedSubjectResponse: Decodable {
     let data: [BangumiSubjectDTO]
     let total: Int?
