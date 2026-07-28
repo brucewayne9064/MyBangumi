@@ -17,12 +17,23 @@ struct SettingsView: View {
                 settingsGroup(title: "数据") {
                     LabeledContent("数据来源", value: "Bangumi Public API")
                     LabeledContent("缓存策略", value: "内存缓存")
-                    LabeledContent("持久化", value: "后续版本")
+                    LabeledContent("凭证存储", value: "Keychain")
                 }
 
                 settingsGroup(title: "账号") {
-                    LabeledContent("登录", value: "即将支持")
-                    LabeledContent("收藏同步", value: "即将支持")
+                    LabeledContent("登录", value: "Bangumi OAuth")
+                    LabeledContent("收藏同步", value: "Bangumi 记录为准")
+                }
+
+                settingsGroup(title: "推荐与讨论") {
+                    LabeledContent(CommunityRoadmap.recommendationStrategy.title, value: "不需要自建后端")
+                    Text(CommunityRoadmap.recommendationStrategy.risk)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    LabeledContent(CommunityRoadmap.discussionStrategy.title, value: "需要单独设计")
+                    Text(CommunityRoadmap.discussionStrategy.risk)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
             .padding()
