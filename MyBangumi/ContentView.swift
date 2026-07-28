@@ -2,36 +2,39 @@ import SwiftUI
 
 struct ContentView: View {
     let api: any BangumiAPI
+    let appSession: AppSession
 
-    init(api: any BangumiAPI) {
+    init(api: any BangumiAPI, appSession: AppSession) {
         self.api = api
+        self.appSession = appSession
     }
 
     var body: some View {
         TabView {
-            DiscoverView(viewModel: DiscoverViewModel(api: api))
-                .tabItem {
-                    Label("发现", systemImage: "sparkles")
-                }
+            Tab("发现", systemImage: "sparkles") {
+                DiscoverView(viewModel: DiscoverViewModel(api: api))
+            }
 
-            DatabaseView(viewModel: DatabaseViewModel(api: api))
-                .tabItem {
-                    Label("数据库", systemImage: "rectangle.stack")
-                }
+            Tab("数据库", systemImage: "rectangle.stack") {
+                DatabaseView(viewModel: DatabaseViewModel(api: api))
+            }
 
-            ProfileView()
-                .tabItem {
-                    Label("我的", systemImage: "person.crop.circle")
-                }
+            Tab("日历", systemImage: "calendar") {
+                TrackingCalendarView(viewModel: TrackingCalendarViewModel(api: api))
+            }
 
-            SearchView(viewModel: SearchViewModel(api: api))
-                .tabItem {
-                    Label("搜索", systemImage: "magnifyingglass")
-                }
+            Tab("我的", systemImage: "person.crop.circle") {
+                ProfileView(viewModel: ProfileViewModel(api: api, appSession: appSession))
+            }
+
+            Tab(role: .search) {
+                SearchView(viewModel: SearchViewModel(api: api))
+            }
         }
+        .tabBarMinimizeBehavior(.onScrollDown)
     }
 }
 
 #Preview {
-    ContentView(api: MockBangumiAPI())
+    ContentView(api: MockBangumiAPI(), appSession: AppSession(tokenStore: MemoryTokenStore()))
 }

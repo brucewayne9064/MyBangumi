@@ -13,6 +13,26 @@ struct SubjectDetailView: View {
         }
         .navigationTitle(viewModel.subject.displayName)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
+        .toolbar {
+            Menu("记录") {
+                ForEach(CollectionStatus.allCases, id: \.self) { status in
+                    Button(status.title) {
+                        Task { await viewModel.updateCollection(status: status) }
+                    }
+                }
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            if let message = viewModel.collectionMessage {
+                Text(message)
+                    .font(.footnote)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .glassEffect(.regular, in: .capsule)
+                    .padding(.bottom, 8)
+            }
+        }
         .task {
             await viewModel.load()
         }
@@ -75,6 +95,38 @@ struct SubjectDetailView: View {
                     }
                     .font(.subheadline)
                 }
+            }
+
+            if viewModel.episodeProgress.isEmpty == false {
+                Text("章节")
+                    .font(.headline)
+                LazyVStack(spacing: 10) {
+                    ForEach(viewModel.episodeProgress, id: \.episode.id) { progress in
+                        episodeRow(progress)
+                    }
+                }
+            }
+        }
+    }
+
+    private func episodeRow(_ progress: EpisodeProgress) -> some View {
+        GlassPanel(isInteractive: true) {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("EP \(String(format: "%.0f", progress.episode.sort)) · \(progress.episode.displayName)")
+                        .font(.subheadline.weight(.semibold))
+                    if !progress.episode.airdate.isEmpty {
+                        Text(progress.episode.airdate)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Spacer()
+                Button(progress.status.title) {
+                    Task { await viewModel.markEpisodeWatched(progress) }
+                }
+                .buttonStyle(.glass)
+                .disabled(progress.status == .watched)
             }
         }
     }

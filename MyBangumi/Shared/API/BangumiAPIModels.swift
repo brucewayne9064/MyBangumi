@@ -1,5 +1,26 @@
 import Foundation
 
+struct BangumiUserDTO: Decodable {
+    let id: Int
+    let username: String
+    let nickname: String
+    let avatar: AvatarDTO?
+
+    var domain: BangumiUser {
+        BangumiUser(id: id, username: username, nickname: nickname, avatarURL: avatar?.mediumURL)
+    }
+}
+
+struct AvatarDTO: Decodable {
+    let large: String?
+    let medium: String?
+    let small: String?
+
+    var mediumURL: URL? {
+        medium.flatMap(URL.init(string:))
+    }
+}
+
 struct BangumiPagedSubjectResponse: Decodable {
     let data: [BangumiSubjectDTO]
     let total: Int?
@@ -29,6 +50,80 @@ struct BangumiSearchResponse: Decodable {
             limit: limit ?? items.count,
             offset: offset ?? 0
         )
+    }
+}
+
+struct BangumiPagedUserCollectionResponse: Decodable {
+    let data: [BangumiUserCollectionDTO]
+
+    var animeCollections: [UserAnimeCollection] {
+        data.compactMap(\.domain)
+    }
+}
+
+struct BangumiUserCollectionDTO: Decodable {
+    let subject: BangumiSubjectDTO?
+    let type: CollectionStatus
+    let rate: Int?
+    let comment: String?
+
+    var domain: UserAnimeCollection? {
+        guard let subject else { return nil }
+        return UserAnimeCollection(
+            subject: subject.animeSubject,
+            status: type,
+            rating: rate ?? 0,
+            comment: comment ?? ""
+        )
+    }
+}
+
+struct BangumiPagedEpisodeResponse: Decodable {
+    let data: [BangumiEpisodeDTO]
+
+    var episodes: [AnimeEpisode] {
+        data.map(\.domain)
+    }
+}
+
+struct BangumiEpisodeDTO: Decodable {
+    let id: Int
+    let sort: Double
+    let name: String
+    let nameCN: String?
+    let airdate: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case sort
+        case name
+        case nameCN = "name_cn"
+        case airdate
+    }
+
+    var domain: AnimeEpisode {
+        AnimeEpisode(id: id, sort: sort, name: name, nameCN: nameCN ?? "", airdate: airdate ?? "")
+    }
+}
+
+struct BangumiEpisodeCollectionResponse: Decodable {
+    let data: [BangumiEpisodeCollectionDTO]
+
+    func progress(episodes: [AnimeEpisode]) -> [EpisodeProgress] {
+        let statusByEpisodeID = Dictionary(uniqueKeysWithValues: data.map { ($0.episodeID, $0.type) })
+        return episodes.map { episode in
+            EpisodeProgress(episode: episode, status: statusByEpisodeID[episode.id] ?? .none)
+        }
+    }
+}
+
+struct BangumiEpisodeCollectionDTO: Decodable {
+    let episodeID: Int
+    let type: EpisodeCollectionStatus
+
+    enum CodingKeys: String, CodingKey {
+        case episodeID = "episode_id"
+        case type
     }
 }
 

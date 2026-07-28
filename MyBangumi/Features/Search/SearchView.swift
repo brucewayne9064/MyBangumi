@@ -18,34 +18,40 @@ struct SearchView: View {
                         Task { await viewModel.search(keyword: viewModel.keyword, offset: 0) }
                     }
                 case .loaded(let page):
-                    List {
-                        ForEach(page.items) { subject in
-                            NavigationLink {
-                                SubjectDetailView(viewModel: SubjectDetailViewModel(subject: subject, api: viewModel.api))
-                            } label: {
-                                SubjectCardView(subject: subject)
-                            }
-                            .listRowSeparator(.hidden)
-                        }
-                        if page.hasMore {
-                            VStack(spacing: 8) {
-                                if let loadMoreError = viewModel.loadMoreError {
-                                    Text(loadMoreError)
-                                        .font(.footnote)
-                                        .foregroundStyle(.red)
-                                        .multilineTextAlignment(.center)
+                    ScrollView {
+                        GlassEffectContainer(spacing: 16) {
+                            LazyVStack(spacing: 12) {
+                                ForEach(page.items) { subject in
+                                    NavigationLink {
+                                        SubjectDetailView(viewModel: SubjectDetailViewModel(subject: subject, api: viewModel.api))
+                                    } label: {
+                                        SubjectCardView(subject: subject)
+                                    }
+                                    .buttonStyle(.plain)
                                 }
 
-                                Button(viewModel.isLoadingMore ? "加载中..." : "加载更多") {
-                                    Task { await viewModel.loadMore() }
+                                if page.hasMore {
+                                    VStack(spacing: 8) {
+                                        if let loadMoreError = viewModel.loadMoreError {
+                                            Text(loadMoreError)
+                                                .font(.footnote)
+                                                .foregroundStyle(.red)
+                                                .multilineTextAlignment(.center)
+                                        }
+
+                                        Button(viewModel.isLoadingMore ? "加载中..." : "加载更多") {
+                                            Task { await viewModel.loadMore() }
+                                        }
+                                        .disabled(viewModel.isLoadingMore)
+                                        .buttonStyle(.glass)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 8)
                                 }
-                                .disabled(viewModel.isLoadingMore)
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
                         }
+                        .padding()
                     }
-                    .listStyle(.plain)
                 }
             }
             .navigationTitle("搜索")

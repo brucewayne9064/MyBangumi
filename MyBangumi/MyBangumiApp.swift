@@ -17,8 +17,8 @@ struct AppLaunchConfiguration {
         arguments.contains(Self.useMockAPIFlag)
     }
 
-    func makeAPI() -> any BangumiAPI {
-        usesMockAPI ? MockBangumiAPI() : BangumiAPIClient()
+    func makeAPI(accessTokenProvider: (@Sendable () -> String?)? = nil) -> any BangumiAPI {
+        usesMockAPI ? MockBangumiAPI() : BangumiAPIClient(accessTokenProvider: accessTokenProvider)
     }
 
     static var current: Self {
@@ -29,10 +29,17 @@ struct AppLaunchConfiguration {
 @main
 struct MyBangumiApp: App {
     private let launchConfiguration = AppLaunchConfiguration.current
+    @State private var appSession = AppSession()
 
     var body: some Scene {
         WindowGroup {
-            ContentView(api: launchConfiguration.makeAPI())
+            ContentView(
+                api: launchConfiguration.makeAPI(accessTokenProvider: { appSession.accessToken }),
+                appSession: appSession
+            )
+            .task {
+                await appSession.restore()
+            }
         }
     }
 }

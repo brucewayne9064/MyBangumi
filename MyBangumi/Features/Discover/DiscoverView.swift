@@ -32,11 +32,14 @@ struct DiscoverView: View {
                 if subjects.isEmpty {
                     EmptyStateView(title: "暂无内容", message: "这个模块暂时没有可展示的动画。")
                 } else {
-                    ForEach(subjects) { subject in
-                        NavigationLink {
-                            SubjectDetailView(viewModel: SubjectDetailViewModel(subject: subject, api: viewModel.api))
-                        } label: {
-                            SubjectCardView(subject: subject)
+                    GlassEffectContainer(spacing: 16) {
+                        ForEach(subjects) { subject in
+                            NavigationLink {
+                                SubjectDetailView(viewModel: SubjectDetailViewModel(subject: subject, api: viewModel.api))
+                            } label: {
+                                SubjectCardView(subject: subject)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
