@@ -23,7 +23,7 @@ struct ContentView: View {
                 DatabaseView(viewModel: DatabaseViewModel(api: api))
             }
 
-            Tab("日历", systemImage: "calendar") {
+            Tab("每日放送", systemImage: "calendar") {
                 TrackingCalendarView(viewModel: TrackingCalendarViewModel(api: api))
             }
 
