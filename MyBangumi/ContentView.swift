@@ -3,16 +3,18 @@ import SwiftUI
 struct ContentView: View {
     let api: any BangumiAPI
     let appSession: AppSession
+    @State private var discoverViewModel: DiscoverViewModel
 
     init(api: any BangumiAPI, appSession: AppSession) {
         self.api = api
         self.appSession = appSession
+        _discoverViewModel = State(initialValue: DiscoverViewModel(api: api))
     }
 
     var body: some View {
         TabView {
             Tab("发现", systemImage: "sparkles") {
-                DiscoverView(viewModel: DiscoverViewModel(api: api))
+                DiscoverView(viewModel: discoverViewModel)
             }
 
             Tab("数据库", systemImage: "rectangle.stack") {
@@ -32,6 +34,12 @@ struct ContentView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        .background {
+            TabBarReselectObserver(observedIndex: 0) {
+                Task { await discoverViewModel.reload() }
+            }
+            .frame(width: 0, height: 0)
+        }
     }
 }
 

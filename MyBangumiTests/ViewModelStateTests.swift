@@ -63,6 +63,16 @@ struct ViewModelStateTests {
         #expect(await api.browseRequestCount == 2)
     }
 
+    @Test @MainActor func discoverReloadForcesFreshRequests() async {
+        let api = CountingBrowseBangumiAPI()
+        let viewModel = DiscoverViewModel(api: api)
+
+        await viewModel.load()
+        await viewModel.reload()
+
+        #expect(await api.browseRequestCount == 4)
+    }
+
     @Test @MainActor func discoverMapsErrorsToFailedStates() async {
         let viewModel = DiscoverViewModel(api: MockBangumiAPI(error: .server(statusCode: 500)))
 

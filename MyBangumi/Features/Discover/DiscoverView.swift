@@ -12,6 +12,9 @@ struct DiscoverView: View {
                 }
                 .padding()
             }
+            .refreshable {
+                await viewModel.reload()
+            }
             .navigationTitle("发现")
             .task {
                 await viewModel.load()
