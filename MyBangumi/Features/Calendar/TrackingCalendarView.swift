@@ -117,9 +117,9 @@ struct TrackingCalendarView: View {
                 .allowsHitTesting(isWeekSelectorExpanded == false)
         }
         .frame(
-            minWidth: isWeekSelectorExpanded ? nil : 56,
-            idealWidth: isWeekSelectorExpanded ? nil : 56,
-            maxWidth: isWeekSelectorExpanded ? .infinity : 56
+            minWidth: isWeekSelectorExpanded ? nil : 96,
+            idealWidth: isWeekSelectorExpanded ? nil : 96,
+            maxWidth: isWeekSelectorExpanded ? .infinity : 96
         )
         .frame(height: 44)
         .glassEffect(.regular, in: .capsule)
@@ -184,26 +184,7 @@ struct TrackingCalendarView: View {
     }
 
     private var collapsedWeekOrbTitle: String {
-        guard let selectedDay = viewModel.selectedDay else { return "放送" }
-        return compactWeekdayTitle(for: selectedDay)
-    }
-
-    private func compactWeekdayTitle(for day: AiringCalendarDay) -> String {
-        let shortTitle = shortWeekdayTitle(day.title)
-        if shortTitle.isEmpty == false {
-            return "周\(shortTitle)"
-        }
-
-        switch day.id {
-        case 1: return "周一"
-        case 2: return "周二"
-        case 3: return "周三"
-        case 4: return "周四"
-        case 5: return "周五"
-        case 6: return "周六"
-        case 7: return "周日"
-        default: return japaneseWeekdayMark(day.id)
-        }
+        viewModel.selectedDay?.title ?? "放送"
     }
 
     private func weekdayChip(_ day: AiringCalendarDay) -> some View {
@@ -241,7 +222,12 @@ struct TrackingCalendarView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
-                Spacer()
+                Spacer(minLength: 0)
+            }
+            .overlay(alignment: .trailing) {
+                if isToday(day) {
+                    todayWatermark
+                }
             }
 
             if day.items.isEmpty {
@@ -253,6 +239,23 @@ struct TrackingCalendarView: View {
                 broadcastList(day.items)
             }
         }
+    }
+
+    private var todayWatermark: some View {
+        Text("今日")
+            .font(.custom("HiraginoMinchoProN-W3", size: 78))
+            .foregroundStyle(BangumiTheme.accent.opacity(0.14))
+            .lineLimit(1)
+            .minimumScaleFactor(0.45)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
+            .padding(.leading, 88)
+            .offset(y: 2)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+
+    private func isToday(_ day: AiringCalendarDay) -> Bool {
+        day.id == TrackingCalendarViewModel.bangumiWeekdayID(for: Date())
     }
 
     private func featuredBanner(_ subject: AnimeSubject, totalCount: Int) -> some View {
