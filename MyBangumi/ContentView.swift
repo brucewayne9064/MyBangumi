@@ -2,9 +2,11 @@ import SwiftUI
 
 struct ContentView: View {
     let api: any BangumiAPI
+    let appSession: AppSession
 
-    init(api: any BangumiAPI) {
+    init(api: any BangumiAPI, appSession: AppSession) {
         self.api = api
+        self.appSession = appSession
     }
 
     var body: some View {
@@ -30,5 +32,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView(api: MockBangumiAPI())
+    ContentView(api: MockBangumiAPI(), appSession: AppSession(tokenStore: MemoryTokenStore()))
 }

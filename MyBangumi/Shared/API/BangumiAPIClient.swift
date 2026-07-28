@@ -5,17 +5,20 @@ struct BangumiAPIClient: BangumiAPI {
     private let session: URLSession
     private let userAgent: String
     private let cache: InMemorySubjectCache
+    private let accessTokenProvider: (@Sendable () -> String?)?
 
     init(
         baseURL: URL = URL(string: "https://api.bgm.tv")!,
         session: URLSession = .shared,
         userAgent: String = "MyBangumi/1.0 (iOS; https://github.com/brucewayne9064/MyBangumi)",
-        cache: InMemorySubjectCache = InMemorySubjectCache()
+        cache: InMemorySubjectCache = InMemorySubjectCache(),
+        accessTokenProvider: (@Sendable () -> String?)? = nil
     ) {
         self.baseURL = baseURL
         self.session = session
         self.userAgent = userAgent
         self.cache = cache
+        self.accessTokenProvider = accessTokenProvider
     }
 
     func browseSubjects(type: SubjectType, sort: SubjectSort, limit: Int, offset: Int) async throws -> PagedSubjects {
@@ -69,6 +72,9 @@ struct BangumiAPIClient: BangumiAPI {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+        if let accessToken = accessTokenProvider?(), !accessToken.isEmpty {
+            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        }
         if let body {
             request.httpBody = body
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
