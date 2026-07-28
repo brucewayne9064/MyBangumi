@@ -3,6 +3,10 @@ import SwiftUI
 struct TrackingCalendarView: View {
     @State var viewModel: TrackingCalendarViewModel
     @State private var isWeekSelectorExpanded = true
+    @State private var isWeekSelectorPinnedExpanded = false
+    @State private var lastScrollOffset: CGFloat = 0
+    @State private var pinnedScrollOffset: CGFloat = 0
+    @Namespace private var weekSelectorNamespace
 
     var body: some View {
         NavigationStack {
@@ -15,8 +19,8 @@ struct TrackingCalendarView: View {
             }
             .onScrollGeometryChange(for: CGFloat.self) { geometry in
                 geometry.contentOffset.y
-            } action: { oldOffset, newOffset in
-                updateWeekSelectorExpansion(previousOffset: oldOffset, currentOffset: newOffset)
+            } action: { _, newOffset in
+                updateWeekSelectorExpansion(offset: newOffset)
             }
             .safeAreaInset(edge: .top, spacing: 0) {
                 if showsWeekSelector {
@@ -31,6 +35,10 @@ struct TrackingCalendarView: View {
         }
     }
 
+    private var weekSelectorMorphAnimation: Animation {
+        .smooth(duration: 0.7)
+    }
+
     private var showsWeekSelector: Bool {
         guard case .loaded = viewModel.state else { return false }
         return viewModel.days.isEmpty == false && viewModel.selectedDay != nil
@@ -41,30 +49,79 @@ struct TrackingCalendarView: View {
         .ignoresSafeArea()
     }
 
-    private func updateWeekSelectorExpansion(previousOffset: CGFloat, currentOffset: CGFloat) {
+    private func updateWeekSelectorExpansion(offset: CGFloat) {
         guard showsWeekSelector else { return }
+        lastScrollOffset = offset
 
-        let nextExpanded = WeekSelectorScrollVisibility.isExpanded(
-            previousOffset: previousOffset,
-            currentOffset: currentOffset,
-            currentlyExpanded: isWeekSelectorExpanded
-        )
-        guard nextExpanded != isWeekSelectorExpanded else { return }
-        isWeekSelectorExpanded = nextExpanded
+        let nearTop = WeekSelectorScrollVisibility.isExpanded(offset: offset)
+        if nearTop {
+            isWeekSelectorPinnedExpanded = false
+            setWeekSelectorExpanded(true)
+            return
+        }
+
+        if isWeekSelectorPinnedExpanded {
+            if abs(offset - pinnedScrollOffset) > 8 {
+                isWeekSelectorPinnedExpanded = false
+                setWeekSelectorExpanded(false)
+            }
+            return
+        }
+
+        setWeekSelectorExpanded(false)
+    }
+
+    private func expandWeekSelectorManually() {
+        pinnedScrollOffset = lastScrollOffset
+        isWeekSelectorPinnedExpanded = true
+        setWeekSelectorExpanded(true)
+    }
+
+    private func setWeekSelectorExpanded(_ expanded: Bool) {
+        guard expanded != isWeekSelectorExpanded else { return }
+        withAnimation(weekSelectorMorphAnimation) {
+            isWeekSelectorExpanded = expanded
+        }
     }
 
     private var weekSelectorChrome: some View {
-        HStack(spacing: 0) {
-            weekSelectorBar
-            if isWeekSelectorExpanded == false {
-                Spacer(minLength: 0)
+        GlassEffectContainer(spacing: 20) {
+            HStack(spacing: 0) {
+                weekSelectorGlass
+
+                if isWeekSelectorExpanded == false {
+                    Color.clear
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .allowsHitTesting(true)
+                }
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 4)
+            .padding(.bottom, isWeekSelectorExpanded ? 8 : 14)
+            .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 4)
-        .padding(.bottom, 8)
-        .frame(minHeight: 52, alignment: .leading)
-        .animation(.snappy(duration: 0.22), value: isWeekSelectorExpanded)
+    }
+
+    /// One stable glass surface whose width morphs between full bar and leading capsule.
+    private var weekSelectorGlass: some View {
+        ZStack {
+            expandedWeekSelectorContent
+                .opacity(isWeekSelectorExpanded ? 1 : 0)
+                .allowsHitTesting(isWeekSelectorExpanded)
+
+            collapsedWeekSelectorContent
+                .opacity(isWeekSelectorExpanded ? 0 : 1)
+                .allowsHitTesting(isWeekSelectorExpanded == false)
+        }
+        .frame(
+            minWidth: isWeekSelectorExpanded ? nil : 56,
+            idealWidth: isWeekSelectorExpanded ? nil : 56,
+            maxWidth: isWeekSelectorExpanded ? .infinity : 56
+        )
+        .frame(height: 44)
+        .glassEffect(.regular, in: .capsule)
+        .glassEffectID("weekSelector", in: weekSelectorNamespace)
     }
 
     @ViewBuilder
@@ -89,52 +146,62 @@ struct TrackingCalendarView: View {
         }
     }
 
-    private var weekSelectorBar: some View {
-        Group {
-            if isWeekSelectorExpanded {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 6) {
-                        ForEach(viewModel.days, id: \.id) { day in
-                            Button {
-                                viewModel.select(dayID: day.id)
-                            } label: {
-                                weekdayChip(day)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel(day.title)
-                            .accessibilityValue("\(day.items.count) 部")
-                            .accessibilityHint("切换到\(day.title)的每日放送")
-                        }
+    private var expandedWeekSelectorContent: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(viewModel.days, id: \.id) { day in
+                    Button {
+                        viewModel.select(dayID: day.id)
+                    } label: {
+                        weekdayChip(day)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 4)
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(day.title)
+                    .accessibilityValue("\(day.items.count) 部")
+                    .accessibilityHint("切换到\(day.title)的每日放送")
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: 44)
-                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                .glassEffect(.regular, in: .rect(cornerRadius: 22))
-            } else {
-                Button {
-                    isWeekSelectorExpanded = true
-                } label: {
-                    Text(collapsedWeekOrbTitle)
-                        .font(.headline.weight(.bold))
-                        .frame(width: 44, height: 44)
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(BangumiTheme.accent)
-                .clipShape(Circle())
-                .glassEffect(.regular, in: .circle)
-                .accessibilityLabel(viewModel.selectedDay?.title ?? "每日放送")
-                .accessibilityHint("展开星期选择")
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
         }
+    }
+
+    private var collapsedWeekSelectorContent: some View {
+        Button(action: expandWeekSelectorManually) {
+            Text(collapsedWeekOrbTitle)
+                .font(.subheadline.weight(.bold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(BangumiTheme.accent)
+        .accessibilityLabel(viewModel.selectedDay?.title ?? "每日放送")
+        .accessibilityHint("展开星期选择")
     }
 
     private var collapsedWeekOrbTitle: String {
         guard let selectedDay = viewModel.selectedDay else { return "放送" }
-        let shortTitle = shortWeekdayTitle(selectedDay.title)
-        return shortTitle.isEmpty ? japaneseWeekdayMark(selectedDay.id) : shortTitle
+        return compactWeekdayTitle(for: selectedDay)
+    }
+
+    private func compactWeekdayTitle(for day: AiringCalendarDay) -> String {
+        let shortTitle = shortWeekdayTitle(day.title)
+        if shortTitle.isEmpty == false {
+            return "周\(shortTitle)"
+        }
+
+        switch day.id {
+        case 1: return "周一"
+        case 2: return "周二"
+        case 3: return "周三"
+        case 4: return "周四"
+        case 5: return "周五"
+        case 6: return "周六"
+        case 7: return "周日"
+        default: return japaneseWeekdayMark(day.id)
+        }
     }
 
     private func weekdayChip(_ day: AiringCalendarDay) -> some View {
