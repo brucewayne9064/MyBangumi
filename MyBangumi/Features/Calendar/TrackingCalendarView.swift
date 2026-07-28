@@ -2,27 +2,128 @@ import SwiftUI
 
 struct TrackingCalendarView: View {
     @State var viewModel: TrackingCalendarViewModel
+    @State private var isWeekSelectorExpanded = true
+    @State private var isWeekSelectorPinnedExpanded = false
+    @State private var lastScrollOffset: CGFloat = 0
+    @State private var pinnedScrollOffset: CGFloat = 0
+    @Namespace private var weekSelectorNamespace
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 20) {
                     content
                         .padding(.horizontal)
                 }
                 .padding(.vertical)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                geometry.contentOffset.y
+            } action: { _, newOffset in
+                updateWeekSelectorExpansion(offset: newOffset)
+            }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if showsWeekSelector {
+                    weekSelectorChrome
+                }
             }
             .background(calendarBackground)
-            .navigationTitle("每日放送")
+            .toolbarVisibility(.hidden, for: .navigationBar)
             .task {
+                guard viewModel.state == .idle else { return }
                 await viewModel.load()
             }
         }
     }
 
+    private var weekSelectorMorphAnimation: Animation {
+        .smooth(duration: 0.7)
+    }
+
+    private var showsWeekSelector: Bool {
+        guard case .loaded = viewModel.state else { return false }
+        return viewModel.days.isEmpty == false && viewModel.selectedDay != nil
+    }
+
     private var calendarBackground: some View {
         Color(.systemGroupedBackground)
         .ignoresSafeArea()
+    }
+
+    private func updateWeekSelectorExpansion(offset: CGFloat) {
+        guard showsWeekSelector else { return }
+        lastScrollOffset = offset
+
+        let nearTop = WeekSelectorScrollVisibility.isExpanded(offset: offset)
+        if nearTop {
+            isWeekSelectorPinnedExpanded = false
+            setWeekSelectorExpanded(true)
+            return
+        }
+
+        if isWeekSelectorPinnedExpanded {
+            if abs(offset - pinnedScrollOffset) > 8 {
+                isWeekSelectorPinnedExpanded = false
+                setWeekSelectorExpanded(false)
+            }
+            return
+        }
+
+        setWeekSelectorExpanded(false)
+    }
+
+    private func expandWeekSelectorManually() {
+        pinnedScrollOffset = lastScrollOffset
+        isWeekSelectorPinnedExpanded = true
+        setWeekSelectorExpanded(true)
+    }
+
+    private func setWeekSelectorExpanded(_ expanded: Bool) {
+        guard expanded != isWeekSelectorExpanded else { return }
+        withAnimation(weekSelectorMorphAnimation) {
+            isWeekSelectorExpanded = expanded
+        }
+    }
+
+    private var weekSelectorChrome: some View {
+        GlassEffectContainer(spacing: 20) {
+            HStack(spacing: 0) {
+                weekSelectorGlass
+
+                if isWeekSelectorExpanded == false {
+                    Color.clear
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .allowsHitTesting(true)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 4)
+            .padding(.bottom, isWeekSelectorExpanded ? 8 : 14)
+            .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
+        }
+    }
+
+    /// One stable glass surface whose width morphs between full bar and leading capsule.
+    private var weekSelectorGlass: some View {
+        ZStack {
+            expandedWeekSelectorContent
+                .opacity(isWeekSelectorExpanded ? 1 : 0)
+                .allowsHitTesting(isWeekSelectorExpanded)
+
+            collapsedWeekSelectorContent
+                .opacity(isWeekSelectorExpanded ? 0 : 1)
+                .allowsHitTesting(isWeekSelectorExpanded == false)
+        }
+        .frame(
+            minWidth: isWeekSelectorExpanded ? nil : 56,
+            idealWidth: isWeekSelectorExpanded ? nil : 56,
+            maxWidth: isWeekSelectorExpanded ? .infinity : 56
+        )
+        .frame(height: 44)
+        .glassEffect(.regular, in: .capsule)
+        .glassEffectID("weekSelector", in: weekSelectorNamespace)
     }
 
     @ViewBuilder
@@ -36,7 +137,6 @@ struct TrackingCalendarView: View {
             if viewModel.days.isEmpty {
                 EmptyStateView(title: "暂无放送数据", message: "Bangumi 每日放送暂时没有可展示内容。")
             } else if let selectedDay = viewModel.selectedDay {
-                weekSelector
                 dayOverview(selectedDay)
             } else {
                 EmptyStateView(title: "暂无放送数据", message: "Bangumi 每日放送暂时没有可展示内容。")
@@ -48,53 +148,87 @@ struct TrackingCalendarView: View {
         }
     }
 
-    private var weekSelector: some View {
+    private var expandedWeekSelectorContent: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
+            HStack(spacing: 6) {
                 ForEach(viewModel.days, id: \.id) { day in
-                    weekdayChip(day)
-                        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                        .onTapGesture {
-                            withAnimation(.spring(duration: 0.28)) {
-                                viewModel.select(dayID: day.id)
-                            }
-                        }
-                        .accessibilityAddTraits(.isButton)
-                        .accessibilityLabel(day.title)
-                        .accessibilityValue("\(day.items.count) 部")
-                        .accessibilityHint("切换到\(day.title)的每日放送")
+                    Button {
+                        viewModel.select(dayID: day.id)
+                    } label: {
+                        weekdayChip(day)
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(day.title)
+                    .accessibilityValue("\(day.items.count) 部")
+                    .accessibilityHint("切换到\(day.title)的每日放送")
+                }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 12)
             .padding(.vertical, 4)
+        }
+    }
+
+    private var collapsedWeekSelectorContent: some View {
+        Button(action: expandWeekSelectorManually) {
+            Text(collapsedWeekOrbTitle)
+                .font(.subheadline.weight(.bold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(BangumiTheme.accent)
+        .accessibilityLabel(viewModel.selectedDay?.title ?? "每日放送")
+        .accessibilityHint("展开星期选择")
+    }
+
+    private var collapsedWeekOrbTitle: String {
+        guard let selectedDay = viewModel.selectedDay else { return "放送" }
+        return compactWeekdayTitle(for: selectedDay)
+    }
+
+    private func compactWeekdayTitle(for day: AiringCalendarDay) -> String {
+        let shortTitle = shortWeekdayTitle(day.title)
+        if shortTitle.isEmpty == false {
+            return "周\(shortTitle)"
+        }
+
+        switch day.id {
+        case 1: return "周一"
+        case 2: return "周二"
+        case 3: return "周三"
+        case 4: return "周四"
+        case 5: return "周五"
+        case 6: return "周六"
+        case 7: return "周日"
+        default: return japaneseWeekdayMark(day.id)
         }
     }
 
     private func weekdayChip(_ day: AiringCalendarDay) -> some View {
         let isSelected = viewModel.selectedDay?.id == day.id
 
-        return ZStack(alignment: .topTrailing) {
+        return ZStack {
             Text(japaneseWeekdayMark(day.id))
-                .font(.system(size: 34, weight: .black, design: .rounded))
-                .foregroundStyle(isSelected ? .white.opacity(0.18) : BangumiTheme.accent.opacity(0.12))
-                .padding(.top, -2)
-                .padding(.trailing, 5)
+                .font(.system(size: 18, weight: .black, design: .rounded))
+                .foregroundStyle(isSelected ? Color.white.opacity(0.28) : BangumiTheme.accent.opacity(0.14))
+                .offset(x: 7, y: -6)
 
-            VStack(spacing: 4) {
+            VStack(spacing: 1) {
                 Text(shortWeekdayTitle(day.title))
-                    .font(.subheadline.weight(.semibold))
+                    .font(.caption.weight(.semibold))
                 Text("\(day.items.count) 部")
                     .font(.caption2.weight(.medium))
-                    .foregroundStyle(isSelected ? .white.opacity(0.82) : .secondary)
+                    .opacity(isSelected ? 0.86 : 1)
+                    .foregroundStyle(isSelected ? .white : .secondary)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(width: 58, height: 56)
-        .background(isSelected ? BangumiTheme.accent : Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(isSelected ? Color.clear : Color.secondary.opacity(0.12), lineWidth: 1)
-        }
+        .frame(width: 44, height: 36)
+        .clipped()
         .foregroundStyle(isSelected ? .white : .primary)
+        .background(isSelected ? BangumiTheme.accent : Color.clear, in: Capsule())
     }
 
     private func dayOverview(_ day: AiringCalendarDay) -> some View {
