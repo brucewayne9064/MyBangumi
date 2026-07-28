@@ -5,12 +5,14 @@ struct ContentView: View {
     let appSession: AppSession
     let oauthSignInHandler: OAuthSignInHandler?
     @State private var discoverViewModel: DiscoverViewModel
+    @State private var calendarViewModel: TrackingCalendarViewModel
 
     init(api: any BangumiAPI, appSession: AppSession, oauthSignInHandler: OAuthSignInHandler? = nil) {
         self.api = api
         self.appSession = appSession
         self.oauthSignInHandler = oauthSignInHandler
         _discoverViewModel = State(initialValue: DiscoverViewModel(api: api))
+        _calendarViewModel = State(initialValue: TrackingCalendarViewModel(api: api))
     }
 
     var body: some View {
@@ -24,7 +26,7 @@ struct ContentView: View {
             }
 
             Tab("每日放送", systemImage: "calendar") {
-                TrackingCalendarView(viewModel: TrackingCalendarViewModel(api: api))
+                TrackingCalendarView(viewModel: calendarViewModel)
             }
 
             Tab("我的", systemImage: "person.crop.circle") {

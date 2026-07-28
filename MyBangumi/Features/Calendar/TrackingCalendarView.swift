@@ -11,11 +11,12 @@ struct TrackingCalendarView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 20) {
                     content
                         .padding(.horizontal)
                 }
                 .padding(.vertical)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .onScrollGeometryChange(for: CGFloat.self) { geometry in
                 geometry.contentOffset.y
@@ -28,8 +29,9 @@ struct TrackingCalendarView: View {
                 }
             }
             .background(calendarBackground)
-            .toolbar(.hidden, for: .navigationBar)
+            .toolbarVisibility(.hidden, for: .navigationBar)
             .task {
+                guard viewModel.state == .idle else { return }
                 await viewModel.load()
             }
         }

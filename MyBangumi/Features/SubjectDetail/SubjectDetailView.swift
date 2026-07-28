@@ -13,7 +13,9 @@ struct SubjectDetailView: View {
         }
         .navigationTitle(viewModel.subject.displayName)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarVisibility(.visible, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
+        .background(Color(.systemBackground))
         .toolbar {
             Menu("记录") {
                 ForEach(CollectionStatus.allCases, id: \.self) { status in
