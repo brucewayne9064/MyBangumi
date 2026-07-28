@@ -19,6 +19,7 @@ final class DiscoverViewModel {
 
     @MainActor
     func load() async {
+        guard ranked.isLoaded == false || recent.isLoaded == false else { return }
         async let rankedLoad: Void = loadRanked()
         async let recentLoad: Void = loadRecent()
         _ = await (rankedLoad, recentLoad)
@@ -44,5 +45,14 @@ final class DiscoverViewModel {
         } catch {
             recent = .failed(error.localizedDescription)
         }
+    }
+}
+
+private extension DiscoverViewModel.ModuleState {
+    var isLoaded: Bool {
+        if case .loaded = self {
+            return true
+        }
+        return false
     }
 }
