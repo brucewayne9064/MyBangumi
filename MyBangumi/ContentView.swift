@@ -19,6 +19,10 @@ struct ContentView: View {
                 DatabaseView(viewModel: DatabaseViewModel(api: api))
             }
 
+            Tab("日历", systemImage: "calendar") {
+                TrackingCalendarView(viewModel: TrackingCalendarViewModel(api: api))
+            }
+
             Tab("我的", systemImage: "person.crop.circle") {
                 ProfileView(viewModel: ProfileViewModel(api: api, appSession: appSession))
             }
