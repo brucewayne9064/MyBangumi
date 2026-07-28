@@ -221,6 +221,18 @@ private actor ControlledSearchBangumiAPI: BangumiAPI {
         fatalError("Unused in SearchViewModelTests")
     }
 
+    func episodes(subjectID: Int) async throws -> [AnimeEpisode] {
+        fatalError("Unused in SearchViewModelTests")
+    }
+
+    func episodeProgress(subjectID: Int) async throws -> [EpisodeProgress] {
+        fatalError("Unused in SearchViewModelTests")
+    }
+
+    func updateEpisodeProgress(episodeID: Int, status: EpisodeCollectionStatus) async throws {
+        fatalError("Unused in SearchViewModelTests")
+    }
+
     func browseSubjects(type: SubjectType, sort: SubjectSort, limit: Int, offset: Int) async throws -> PagedSubjects {
         fatalError("Unused in SearchViewModelTests")
     }

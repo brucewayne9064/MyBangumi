@@ -53,6 +53,38 @@ struct BangumiAPIClient: BangumiAPI {
         )
     }
 
+    func episodes(subjectID: Int) async throws -> [AnimeEpisode] {
+        let response: BangumiPagedEpisodeResponse = try await send(
+            baseURL.appending(path: "/v0/episodes"),
+            method: "GET",
+            body: Optional<Data>.none,
+            endpoint: "/v0/episodes",
+            query: [URLQueryItem(name: "subject_id", value: String(subjectID))]
+        )
+        return response.episodes
+    }
+
+    func episodeProgress(subjectID: Int) async throws -> [EpisodeProgress] {
+        let episodes = try await episodes(subjectID: subjectID)
+        let response: BangumiEpisodeCollectionResponse = try await send(
+            baseURL.appending(path: "/v0/users/-/collections/\(subjectID)/episodes"),
+            method: "GET",
+            body: Optional<Data>.none,
+            endpoint: "/v0/users/-/collections/{subject_id}/episodes"
+        )
+        return response.progress(episodes: episodes)
+    }
+
+    func updateEpisodeProgress(episodeID: Int, status: EpisodeCollectionStatus) async throws {
+        let payload = EpisodeCollectionModifyRequest(type: status.rawValue)
+        try await sendNoContent(
+            baseURL.appending(path: "/v0/users/-/collections/-/episodes/\(episodeID)"),
+            method: "PUT",
+            body: try JSONEncoder().encode(payload),
+            endpoint: "/v0/users/-/collections/-/episodes/{episode_id}"
+        )
+    }
+
     func browseSubjects(type: SubjectType, sort: SubjectSort, limit: Int, offset: Int) async throws -> PagedSubjects {
         var components = URLComponents(url: baseURL.appending(path: "/v0/subjects"), resolvingAgainstBaseURL: false)
         components?.queryItems = [
@@ -189,5 +221,9 @@ private struct UserSubjectCollectionModifyRequest: Encodable {
         case comment
         case privateCollection = "private"
     }
+}
+
+private struct EpisodeCollectionModifyRequest: Encodable {
+    let type: Int
 }
 

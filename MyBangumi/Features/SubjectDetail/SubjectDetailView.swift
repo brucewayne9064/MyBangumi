@@ -96,6 +96,38 @@ struct SubjectDetailView: View {
                     .font(.subheadline)
                 }
             }
+
+            if viewModel.episodeProgress.isEmpty == false {
+                Text("章节")
+                    .font(.headline)
+                LazyVStack(spacing: 10) {
+                    ForEach(viewModel.episodeProgress, id: \.episode.id) { progress in
+                        episodeRow(progress)
+                    }
+                }
+            }
+        }
+    }
+
+    private func episodeRow(_ progress: EpisodeProgress) -> some View {
+        GlassPanel(isInteractive: true) {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("EP \(String(format: "%.0f", progress.episode.sort)) · \(progress.episode.displayName)")
+                        .font(.subheadline.weight(.semibold))
+                    if !progress.episode.airdate.isEmpty {
+                        Text(progress.episode.airdate)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Spacer()
+                Button(progress.status.title) {
+                    Task { await viewModel.markEpisodeWatched(progress) }
+                }
+                .buttonStyle(.glass)
+                .disabled(progress.status == .watched)
+            }
         }
     }
 

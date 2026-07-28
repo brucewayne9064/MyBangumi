@@ -78,6 +78,55 @@ struct BangumiUserCollectionDTO: Decodable {
     }
 }
 
+struct BangumiPagedEpisodeResponse: Decodable {
+    let data: [BangumiEpisodeDTO]
+
+    var episodes: [AnimeEpisode] {
+        data.map(\.domain)
+    }
+}
+
+struct BangumiEpisodeDTO: Decodable {
+    let id: Int
+    let sort: Double
+    let name: String
+    let nameCN: String?
+    let airdate: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case sort
+        case name
+        case nameCN = "name_cn"
+        case airdate
+    }
+
+    var domain: AnimeEpisode {
+        AnimeEpisode(id: id, sort: sort, name: name, nameCN: nameCN ?? "", airdate: airdate ?? "")
+    }
+}
+
+struct BangumiEpisodeCollectionResponse: Decodable {
+    let data: [BangumiEpisodeCollectionDTO]
+
+    func progress(episodes: [AnimeEpisode]) -> [EpisodeProgress] {
+        let statusByEpisodeID = Dictionary(uniqueKeysWithValues: data.map { ($0.episodeID, $0.type) })
+        return episodes.map { episode in
+            EpisodeProgress(episode: episode, status: statusByEpisodeID[episode.id] ?? .none)
+        }
+    }
+}
+
+struct BangumiEpisodeCollectionDTO: Decodable {
+    let episodeID: Int
+    let type: EpisodeCollectionStatus
+
+    enum CodingKeys: String, CodingKey {
+        case episodeID = "episode_id"
+        case type
+    }
+}
+
 struct BangumiSubjectDTO: Decodable {
     let id: Int
     let name: String

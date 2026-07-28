@@ -3,6 +3,8 @@ import Foundation
 struct MockBangumiAPI: BangumiAPI {
     var currentUser: BangumiUser
     var collections: [CollectionStatus: [UserAnimeCollection]]
+    var episodes: [AnimeEpisode]
+    var episodeProgress: [EpisodeProgress]
     var subjects: [AnimeSubject]
     var detail: SubjectDetail
     var error: BangumiAPIError?
@@ -10,12 +12,16 @@ struct MockBangumiAPI: BangumiAPI {
     init(
         currentUser: BangumiUser = .preview,
         collections: [CollectionStatus: [UserAnimeCollection]] = [:],
+        episodes: [AnimeEpisode] = [],
+        episodeProgress: [EpisodeProgress] = [],
         subjects: [AnimeSubject] = [.preview],
         detail: SubjectDetail = .preview,
         error: BangumiAPIError? = nil
     ) {
         self.currentUser = currentUser
         self.collections = collections
+        self.episodes = episodes
+        self.episodeProgress = episodeProgress
         self.subjects = subjects
         self.detail = detail
         self.error = error
@@ -33,6 +39,23 @@ struct MockBangumiAPI: BangumiAPI {
     }
 
     func updateCollection(subjectID: Int, status: CollectionStatus, rating: Int?, comment: String?, isPrivate: Bool) async throws {
+        if let error { throw error }
+    }
+
+    func episodes(subjectID: Int) async throws -> [AnimeEpisode] {
+        if let error { throw error }
+        return episodes
+    }
+
+    func episodeProgress(subjectID: Int) async throws -> [EpisodeProgress] {
+        if let error { throw error }
+        if episodeProgress.isEmpty {
+            return episodes.map { EpisodeProgress(episode: $0, status: .none) }
+        }
+        return episodeProgress
+    }
+
+    func updateEpisodeProgress(episodeID: Int, status: EpisodeCollectionStatus) async throws {
         if let error { throw error }
     }
 
