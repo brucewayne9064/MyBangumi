@@ -2,22 +2,15 @@ import Testing
 @testable import MyBangumi
 
 struct TrackingCalendarViewModelTests {
-    @Test @MainActor func calendarGroupsDoingEpisodesByAirdate() async {
+    @Test @MainActor func calendarLoadsPublicAiringDays() async {
         let subject = AnimeSubject.preview
-        let collection = UserAnimeCollection(subject: subject, status: .doing, rating: 0, comment: "")
-        let episode = AnimeEpisode(id: 10, sort: 1, name: "Session 1", nameCN: "第一集", airdate: "2026-07-28")
-        let progress = EpisodeProgress(episode: episode, status: .none)
+        let calendarDay = AiringCalendarDay(id: 1, title: "星期一", items: [subject])
         let viewModel = TrackingCalendarViewModel(
-            api: MockBangumiAPI(collections: [.doing: [collection]], episodeProgress: [progress]),
-            username: "bruce"
+            api: MockBangumiAPI(airingCalendar: [calendarDay])
         )
 
         await viewModel.load()
 
-        #expect(viewModel.days == [
-            CalendarDay(date: "2026-07-28", entries: [
-                CalendarEntry(subject: subject, progress: progress)
-            ])
-        ])
+        #expect(viewModel.days == [calendarDay])
     }
 }

@@ -26,6 +26,16 @@ struct BangumiAPIClient: BangumiAPI {
         return response.domain
     }
 
+    func airingCalendar() async throws -> [AiringCalendarDay] {
+        let response: [BangumiCalendarDayDTO] = try await send(
+            baseURL.appending(path: "/calendar"),
+            method: "GET",
+            body: Optional<Data>.none,
+            endpoint: "/calendar"
+        )
+        return response.map(\.domain)
+    }
+
     func userCollections(username: String, status: CollectionStatus, limit: Int, offset: Int) async throws -> [UserAnimeCollection] {
         let response: BangumiPagedUserCollectionResponse = try await send(
             baseURL.appending(path: "/v0/users/\(username)/collections"),

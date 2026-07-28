@@ -3,11 +3,13 @@ import SwiftUI
 struct ContentView: View {
     let api: any BangumiAPI
     let appSession: AppSession
+    let oauthSignInHandler: OAuthSignInHandler?
     @State private var discoverViewModel: DiscoverViewModel
 
-    init(api: any BangumiAPI, appSession: AppSession) {
+    init(api: any BangumiAPI, appSession: AppSession, oauthSignInHandler: OAuthSignInHandler? = nil) {
         self.api = api
         self.appSession = appSession
+        self.oauthSignInHandler = oauthSignInHandler
         _discoverViewModel = State(initialValue: DiscoverViewModel(api: api))
     }
 
@@ -26,7 +28,7 @@ struct ContentView: View {
             }
 
             Tab("我的", systemImage: "person.crop.circle") {
-                ProfileView(viewModel: ProfileViewModel(api: api, appSession: appSession))
+                ProfileView(viewModel: ProfileViewModel(api: api, appSession: appSession, signInHandler: oauthSignInHandler))
             }
 
             Tab(role: .search) {

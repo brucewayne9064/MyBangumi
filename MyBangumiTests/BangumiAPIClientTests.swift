@@ -103,6 +103,41 @@ struct BangumiAPIClientTests {
         try await client.updateCollection(subjectID: 1, status: .doing, rating: 8, comment: "很喜欢", isPrivate: false)
     }
 
+    @Test func airingCalendarDecodesLegacyCalendarResponse() async throws {
+        let client = makeClient()
+        URLProtocolStub.handler = { request in
+            #expect(request.url?.path == "/calendar")
+            let data = """
+            [
+              {
+                "weekday": { "en": "Mon", "cn": "星期一", "ja": "月曜日", "id": 1 },
+                "items": [
+                  {
+                    "id": 42,
+                    "type": 2,
+                    "name": "Cowboy Bebop",
+                    "name_cn": "星际牛仔",
+                    "summary": "",
+                    "air_date": "1998-04-03",
+                    "air_weekday": 1,
+                    "images": { "large": "https://example.com/large.jpg", "common": "https://example.com/common.jpg", "medium": "https://example.com/medium.jpg" },
+                    "rating": { "total": 100, "score": 8.8 },
+                    "rank": 10
+                  }
+                ]
+              }
+            ]
+            """.data(using: .utf8)!
+            return (HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!, data)
+        }
+
+        let days = try await client.airingCalendar()
+
+        #expect(days.count == 1)
+        #expect(days.first?.title == "星期一")
+        #expect(days.first?.items.first?.displayName == "星际牛仔")
+    }
+
     private func makeClient() -> BangumiAPIClient {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [URLProtocolStub.self]

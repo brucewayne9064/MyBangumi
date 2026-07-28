@@ -2,6 +2,7 @@ import Foundation
 
 struct MockBangumiAPI: BangumiAPI {
     var currentUser: BangumiUser
+    var airingCalendar: [AiringCalendarDay]
     var collections: [CollectionStatus: [UserAnimeCollection]]
     var episodes: [AnimeEpisode]
     var episodeProgress: [EpisodeProgress]
@@ -11,6 +12,7 @@ struct MockBangumiAPI: BangumiAPI {
 
     init(
         currentUser: BangumiUser = .preview,
+        airingCalendar: [AiringCalendarDay] = [],
         collections: [CollectionStatus: [UserAnimeCollection]] = [:],
         episodes: [AnimeEpisode] = [],
         episodeProgress: [EpisodeProgress] = [],
@@ -19,6 +21,7 @@ struct MockBangumiAPI: BangumiAPI {
         error: BangumiAPIError? = nil
     ) {
         self.currentUser = currentUser
+        self.airingCalendar = airingCalendar
         self.collections = collections
         self.episodes = episodes
         self.episodeProgress = episodeProgress
@@ -30,6 +33,11 @@ struct MockBangumiAPI: BangumiAPI {
     func me() async throws -> BangumiUser {
         if let error { throw error }
         return currentUser
+    }
+
+    func airingCalendar() async throws -> [AiringCalendarDay] {
+        if let error { throw error }
+        return airingCalendar
     }
 
     func userCollections(username: String, status: CollectionStatus, limit: Int, offset: Int) async throws -> [UserAnimeCollection] {

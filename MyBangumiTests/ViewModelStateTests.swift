@@ -98,6 +98,10 @@ private actor CountingBrowseBangumiAPI: BangumiAPI {
         .preview
     }
 
+    func airingCalendar() async throws -> [AiringCalendarDay] {
+        []
+    }
+
     func userCollections(username: String, status: CollectionStatus, limit: Int, offset: Int) async throws -> [UserAnimeCollection] {
         []
     }

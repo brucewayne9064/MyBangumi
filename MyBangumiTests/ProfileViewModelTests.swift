@@ -29,4 +29,26 @@ struct ProfileViewModelTests {
 
         #expect(viewModel.state == .authenticated(user))
     }
+
+    @Test @MainActor func profileSignInStoresTokenAndLoadsCurrentUser() async throws {
+        let token = OAuthToken(
+            accessToken: "access-token",
+            refreshToken: "refresh-token",
+            expiresAt: Date(timeIntervalSinceNow: 3600),
+            userID: 42
+        )
+        let store = MemoryTokenStore()
+        let session = AppSession(tokenStore: store)
+        let user = BangumiUser(id: 42, username: "bruce", nickname: "Bruce", avatarURL: nil)
+        let viewModel = ProfileViewModel(
+            api: MockBangumiAPI(currentUser: user),
+            appSession: session,
+            signInHandler: { token }
+        )
+
+        await viewModel.signIn()
+
+        #expect(try await store.load() == token)
+        #expect(viewModel.state == .authenticated(user))
+    }
 }

@@ -213,6 +213,10 @@ private actor ControlledSearchBangumiAPI: BangumiAPI {
         fatalError("Unused in SearchViewModelTests")
     }
 
+    func airingCalendar() async throws -> [AiringCalendarDay] {
+        fatalError("Unused in SearchViewModelTests")
+    }
+
     func userCollections(username: String, status: CollectionStatus, limit: Int, offset: Int) async throws -> [UserAnimeCollection] {
         fatalError("Unused in SearchViewModelTests")
     }

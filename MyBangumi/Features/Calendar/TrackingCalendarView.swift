@@ -11,7 +11,7 @@ struct TrackingCalendarView: View {
                 }
                 .padding()
             }
-            .navigationTitle("追番日历")
+            .navigationTitle("每日放送")
             .task {
                 await viewModel.load()
             }
@@ -25,13 +25,11 @@ struct TrackingCalendarView: View {
             ProgressView()
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 40)
-        case .signedOut:
-            EmptyStateView(title: "登录后生成日历", message: "追番日历会基于你的 Bangumi 在看收藏和章节放送日期生成。")
         case .loaded:
             if viewModel.days.isEmpty {
-                EmptyStateView(title: "暂无待看章节", message: "在看动画有章节放送日期后会显示在这里。")
+                EmptyStateView(title: "暂无放送数据", message: "Bangumi 每日放送暂时没有可展示内容。")
             } else {
-                ForEach(viewModel.days, id: \.date) { day in
+                ForEach(viewModel.days, id: \.id) { day in
                     daySection(day)
                 }
             }
@@ -42,29 +40,26 @@ struct TrackingCalendarView: View {
         }
     }
 
-    private func daySection(_ day: CalendarDay) -> some View {
+    private func daySection(_ day: AiringCalendarDay) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(day.date)
+            Text(day.title)
                 .font(.headline)
                 .padding(.horizontal, 4)
-            ForEach(day.entries, id: \.progress.episode.id) { entry in
+            ForEach(day.items) { subject in
                 GlassPanel(isInteractive: true) {
                     HStack(spacing: 12) {
-                        SubjectPosterView(url: entry.subject.imageURL)
+                        SubjectPosterView(url: subject.imageURL)
                             .frame(width: 44, height: 62)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(entry.subject.displayName)
+                            Text(subject.displayName)
                                 .font(.subheadline.weight(.semibold))
-                            Text("EP \(String(format: "%.0f", entry.progress.episode.sort)) · \(entry.progress.episode.displayName)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            if let score = subject.rating.score {
+                                Text(String(format: "评分 %.1f", score))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                         Spacer()
-                        Text(entry.progress.status.title)
-                            .font(.caption.weight(.semibold))
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(.thinMaterial, in: Capsule())
                     }
                 }
             }
@@ -73,5 +68,7 @@ struct TrackingCalendarView: View {
 }
 
 #Preview {
-    TrackingCalendarView(viewModel: TrackingCalendarViewModel(api: MockBangumiAPI(), username: "bruce"))
+    TrackingCalendarView(viewModel: TrackingCalendarViewModel(api: MockBangumiAPI(airingCalendar: [
+        AiringCalendarDay(id: 1, title: "星期一", items: [.preview])
+    ])))
 }
