@@ -20,6 +20,25 @@ struct DomainMappingTests {
         #expect(dto.animeSubject.displayName == "Cowboy Bebop")
     }
 
+    @Test func subjectImageURLUpgradesBangumiHTTPImageToHTTPS() throws {
+        let json = """
+        {
+          "id": 1,
+          "name": "Cowboy Bebop",
+          "name_cn": "星际牛仔",
+          "summary": "",
+          "images": { "large": "http://lain.bgm.tv/pic/cover/l/example.jpg" },
+          "rating": { "score": 8.8, "total": 12000 },
+          "rank": 10
+        }
+        """.data(using: .utf8)!
+
+        let dto = try JSONDecoder().decode(BangumiSubjectDTO.self, from: json)
+
+        #expect(dto.animeSubject.imageURL?.scheme == "https")
+        #expect(dto.animeSubject.imageURL?.host == "lain.bgm.tv")
+    }
+
     @Test func pagedSearchResponseMapsItemsAndPagination() throws {
         let json = """
         {

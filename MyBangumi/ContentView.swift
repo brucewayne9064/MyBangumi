@@ -35,6 +35,7 @@ struct ContentView: View {
                 SearchView(viewModel: SearchViewModel(api: api))
             }
         }
+        .tint(BangumiTheme.accent)
         .tabBarMinimizeBehavior(.onScrollDown)
         .background {
             TabBarReselectObserver(observedIndex: 0) {

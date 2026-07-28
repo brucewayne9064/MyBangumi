@@ -2,6 +2,8 @@ import SwiftUI
 
 struct SubjectPosterView: View {
     let url: URL?
+    var width: CGFloat = 92
+    var height: CGFloat = 132
 
     var body: some View {
         AsyncImage(url: url) { phase in
@@ -19,16 +21,21 @@ struct SubjectPosterView: View {
                 fallback
             }
         }
-        .frame(width: 92, height: 132)
+        .frame(width: width, height: height)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .accessibilityHidden(true)
     }
 
     private var fallback: some View {
         LinearGradient(
-            colors: [.blue.opacity(0.55), .purple.opacity(0.35)],
+            colors: [Color(.tertiarySystemFill), Color(.secondarySystemFill)],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
+        .overlay {
+            Image(systemName: "photo")
+                .font(.title3)
+                .foregroundStyle(.secondary.opacity(0.45))
+        }
     }
 }
