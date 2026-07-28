@@ -52,12 +52,14 @@ struct ProfileView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Label("登录 Bangumi", systemImage: "person.crop.circle.badge.plus")
                     .font(.title2.bold())
-                Text("登录后可以同步你的收藏、在看进度和追番日历。OAuth 授权入口将在配置 Bangumi 应用凭据后启用。")
+                Text(viewModel.canSignIn ? "登录后可以同步你的收藏、在看进度和追番日历。" : "请先在 Scheme 环境变量中配置 Bangumi OAuth 凭据。")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                Button("准备登录") {}
+                Button("登录 Bangumi") {
+                    Task { await viewModel.signIn() }
+                }
                     .buttonStyle(.glass)
-                    .disabled(true)
+                    .disabled(viewModel.canSignIn == false)
             }
         }
     }
